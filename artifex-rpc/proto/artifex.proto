@@ -1,0 +1,55 @@
+//
+// Copyright (C) 2022 Eric Le Bihan <eric.le.bihan.dev@free.fr>
+//
+// SPDX-License-Identifier: MIT
+//
+
+syntax = "proto3";
+
+package artifex;
+
+// Service to manage a machine
+service Artifex {
+	// Inspect machine
+	rpc Inspect (InspectRequest) returns (InspectReply) {}
+	// Execute a command on a machine
+	rpc Execute (ExecuteRequest) returns (ExecuteReply) {}
+	// Upgrade a the system of a machine
+	rpc Upgrade (UpgradeRequest) returns (stream UpgradeReply) {}
+}
+
+message InspectRequest {}
+
+// Reply from machine inspection
+message InspectReply {
+	// The version of the kernel the machine is running on
+	string kernel_version = 1;
+}
+
+message ExecuteRequest {
+	// The command to execute on the machine.
+	string command = 1;
+}
+
+// Reply from the execution of a command
+message ExecuteReply {
+	// Standard output
+	string stdout = 1;
+	// Standard error
+	string stderr = 2;
+	// Command exit code
+	int32 code = 3;
+}
+
+message UpgradeRequest {}
+
+// Reply streamed when upgrading the system of a machine
+message UpgradeReply {
+	enum Status {
+		RUNNING = 0;
+		SUCCESS = 1;
+		FAILURE = 2;
+	}
+	Status status = 1;
+	int32 position = 2;
+}

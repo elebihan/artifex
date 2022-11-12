@@ -1,0 +1,15 @@
+[workspace]
+members = [
+  "artifex-client-cli",
+  "artifex-engine",
+  "artifex-rpc",
+  "artifex-server",
+  "random-progression",
+]
+
+[workspace.package]
+version = "0.1.1"
+authors = ["Eric Le Bihan <eric.le.bihan.dev@free.fr>"]
+edition = "2021"
+license = "MIT"
+rust-version = "1.64"

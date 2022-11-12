@@ -1,0 +1,13 @@
+[package]
+name = "artifex-rpc"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+prost = "0.11.2"
+tonic = "0.8.2"
+
+[build-dependencies]
+tonic-build = "0.8.2"

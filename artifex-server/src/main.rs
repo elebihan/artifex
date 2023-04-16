@@ -12,12 +12,15 @@ use artifex_rpc::{
 };
 
 use futures::Stream;
+use http::Method;
 use std::sync::Mutex;
 use std::{pin::Pin, sync::Arc};
 use tokio::sync::mpsc;
 use tokio::task;
 use tokio_stream::wrappers::ReceiverStream;
 use tonic::{transport::Server, Request, Response, Status};
+use tonic_web::GrpcWebLayer;
+use tower_http::cors::{Any, CorsLayer};
 
 #[derive(Default)]
 pub struct ArtifexService {
@@ -99,15 +102,24 @@ impl Artifex for ArtifexService {
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let address = "[::1]:50051".parse().unwrap();
     let artifex = ArtifexService::default();
+    let server = ArtifexServer::new(artifex);
 
     let reflection = tonic_reflection::server::Builder::configure()
         .register_encoded_file_descriptor_set(FILE_DESCRIPTOR_SET)
         .build()
         .unwrap();
 
+    let cors = CorsLayer::new()
+        .allow_methods([Method::POST])
+        .allow_headers(Any)
+        .allow_origin(Any);
+
     Server::builder()
+        .accept_http1(true)
+        .layer(cors)
+        .layer(GrpcWebLayer::new())
+        .add_service(server)
         .add_service(reflection)
-        .add_service(ArtifexServer::new(artifex))
         .serve(address)
         .await?;
     Ok(())

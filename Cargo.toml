@@ -1,6 +1,7 @@
 [workspace]
 members = [
   "artifex-client-cli",
+  "artifex-client-web",
   "artifex-engine",
   "artifex-rpc",
   "artifex-server",

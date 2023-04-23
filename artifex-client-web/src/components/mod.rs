@@ -4,9 +4,8 @@
 // SPDX-License-Identifier: MIT
 //
 
-pub mod artifex_rpc {
-    tonic::include_proto!("artifex");
-}
+mod inspection;
+mod settings;
 
-pub mod components;
-pub mod contexts;
+pub use inspection::Inspection;
+pub use settings::Settings;

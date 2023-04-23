@@ -31,6 +31,7 @@ name = "artifex-client-web"
 version = "0.1.1"
 dependencies = [
  "gloo",
+ "gloo-console",
  "prost",
  "tonic",
  "tonic-build",

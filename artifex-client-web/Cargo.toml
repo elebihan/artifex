@@ -8,6 +8,7 @@ description = "Artifex client program (web application)"
 
 [dependencies]
 gloo = "0.8.0"
+gloo-console = "0.2.3"
 prost = "0.11.2"
 tonic = { version = "0.8.2", default-features = false, features = ["prost", "codegen"] }
 tonic-web-wasm-client = "0.3.3"

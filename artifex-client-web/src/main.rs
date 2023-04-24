@@ -7,7 +7,7 @@
 use yew::prelude::*;
 
 use artifex_client_web::{
-    components::{Inspection, Settings, Tab, TabList},
+    components::{Execution, Inspection, Settings, Tab, TabList},
     contexts::ServerProvider,
 };
 
@@ -22,6 +22,9 @@ fn App() -> Html {
               <TabList>
                 <Tab title="Inspection" >
                   <Inspection />
+                </Tab>
+                <Tab title="Execution" >
+                  <Execution />
                 </Tab>
               </TabList>
             </ServerProvider>

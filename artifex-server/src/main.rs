@@ -100,7 +100,7 @@ impl Artifex for ArtifexService {
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let address = "[::1]:50051".parse().unwrap();
+    let address = "127.0.0.1:50051".parse().unwrap();
     let artifex = ArtifexService::default();
     let server = ArtifexServer::new(artifex);
 

@@ -6,8 +6,9 @@
 
 use std::rc::Rc;
 use yew::prelude::*;
+use yew_hooks::prelude::*;
 
-pub const DEFAULT_URL: &str = "http://[::1]:50051";
+pub const DEFAULT_PORT: u16 = 50051;
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Server {
@@ -32,8 +33,9 @@ pub struct ServerProviderProps {
 
 #[function_component]
 pub fn ServerProvider(props: &ServerProviderProps) -> Html {
+    let location = use_location();
     let server = use_reducer(|| Server {
-        url: DEFAULT_URL.to_string(),
+        url: format!("http://{}:{}", location.hostname, DEFAULT_PORT),
     });
 
     html! {

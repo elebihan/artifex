@@ -6,4 +6,4 @@
 
 mod server;
 
-pub use server::{ServerContext, ServerProvider, DEFAULT_URL};
+pub use server::{ServerContext, ServerProvider};

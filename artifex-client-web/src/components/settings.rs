@@ -7,7 +7,7 @@
 use web_sys::HtmlInputElement;
 use yew::prelude::*;
 
-use crate::contexts::{ServerContext, DEFAULT_URL};
+use crate::contexts::ServerContext;
 
 #[function_component]
 pub fn Settings() -> Html {
@@ -22,7 +22,6 @@ pub fn Settings() -> Html {
           <form>
             <label for="server-url">{"Server URL:"}</label>
             <input id="server-url" type="text" { oninput }
-                   placeholder={ DEFAULT_URL }
                    value={ url } />
           </form>
        </div>

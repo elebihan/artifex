@@ -4,16 +4,10 @@
 // SPDX-License-Identifier: MIT
 //
 
-use tonic_web_wasm_client::Client;
 use yew::prelude::*;
 
-use crate::artifex_rpc::{artifex_client::ArtifexClient, InspectRequest};
 use crate::contexts::ServerContext;
-
-fn create_client(url: &str) -> ArtifexClient<Client> {
-    let client = Client::new(url.to_string());
-    ArtifexClient::new(client)
-}
+use crate::rpc::{create_client, InspectRequest};
 
 pub enum InspectionState {
     Failure(String),

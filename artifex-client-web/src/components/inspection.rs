@@ -93,7 +93,6 @@ impl Component for Inspection {
                 <label for="inspect">{"Inspect machine:"}</label>
                 <button id="inspect" { onclick }>{"Inspect"}</button>
                 </form>
-              <br />
               <textarea rows=10 cols=80 readonly=true value={ output } />
             </div>
         }

@@ -104,7 +104,6 @@ impl Component for Execution {
                 <input id="command" type="text" { oninput }/>
                 <button id="execute" { onclick }>{"Execute"}</button>
                 </form>
-              <br />
               <textarea rows=10 cols=80 readonly=true value={ output } />
             </div>
         }

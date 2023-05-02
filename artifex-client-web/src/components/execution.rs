@@ -4,12 +4,13 @@
 // SPDX-License-Identifier: MIT
 //
 
+use web_sys::HtmlInputElement;
 use yew::prelude::*;
 
 use crate::contexts::ServerContext;
-use crate::rpc::{create_client, InspectRequest};
+use crate::rpc::{create_client, ExecuteRequest};
 
-pub enum InspectionState {
+pub enum ExecutionState {
     Failure(String),
     Idle,
     Ongoing,
@@ -17,18 +18,20 @@ pub enum InspectionState {
 }
 
 pub enum Msg {
-    Inspect,
-    SetInspectionState(InspectionState),
+    CommandChanged(String),
+    Execute,
+    SetExecutionState(ExecutionState),
     ServerUpdated(ServerContext),
 }
 
-pub struct Inspection {
+pub struct Execution {
     server: ServerContext,
-    state: InspectionState,
+    state: ExecutionState,
     _listener: ContextHandle<ServerContext>,
+    command: String,
 }
 
-impl Component for Inspection {
+impl Component for Execution {
     type Message = Msg;
     type Properties = ();
 
@@ -39,33 +42,36 @@ impl Component for Inspection {
             .expect("No server provided");
         Self {
             server,
-            state: InspectionState::Idle,
+            state: ExecutionState::Idle,
             _listener: listener,
+            command: String::new(),
         }
     }
 
     fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
         match msg {
-            Msg::Inspect => {
+            Msg::CommandChanged(command) => {
+                self.command = command;
+                true
+            }
+            Msg::Execute => {
                 let mut client = create_client(&self.server.url);
+                let command = self.command.clone();
                 ctx.link().send_future(async move {
-                    let state = match client.inspect(InspectRequest {}).await {
+                    let state = match client.execute(ExecuteRequest { command }).await {
                         Ok(reply) => {
                             let reply = reply.into_inner();
-                            InspectionState::Success(format!(
-                                "Kernel version: {}",
-                                reply.kernel_version
-                            ))
+                            ExecutionState::Success(reply.stdout.clone())
                         }
-                        Err(e) => InspectionState::Failure(e.to_string()),
+                        Err(e) => ExecutionState::Failure(e.to_string()),
                     };
-                    Msg::SetInspectionState(state)
+                    Msg::SetExecutionState(state)
                 });
                 ctx.link()
-                    .send_message(Msg::SetInspectionState(InspectionState::Ongoing));
+                    .send_message(Msg::SetExecutionState(ExecutionState::Ongoing));
                 false
             }
-            Msg::SetInspectionState(state) => {
+            Msg::SetExecutionState(state) => {
                 self.state = state;
                 true
             }
@@ -77,21 +83,26 @@ impl Component for Inspection {
     }
 
     fn view(&self, ctx: &Context<Self>) -> Html {
+        let oninput = ctx.link().callback(|e: InputEvent| {
+            let input: HtmlInputElement = e.target_unchecked_into();
+            Msg::CommandChanged(input.value())
+        });
         let onclick = ctx.link().callback(|e: MouseEvent| {
             e.prevent_default();
-            Msg::Inspect
+            Msg::Execute
         });
         let output = match &self.state {
-            InspectionState::Failure(text) => format!("Inspection failed: {}", text),
-            InspectionState::Idle => "".to_string(),
-            InspectionState::Ongoing => "Inspection in progress..".to_string(),
-            InspectionState::Success(text) => text.clone(),
+            ExecutionState::Failure(text) => format!("Execution failed: {}", text),
+            ExecutionState::Idle => "".to_string(),
+            ExecutionState::Ongoing => "Execution in progress..".to_string(),
+            ExecutionState::Success(text) => text.clone(),
         };
         html! {
             <div class="server-operations">
               <form>
-                <label for="inspect">{"Inspect machine:"}</label>
-                <button id="inspect" { onclick }>{"Inspect"}</button>
+                <label for="command">{"Execute command:"}</label>
+                <input id="command" type="text" { oninput }/>
+                <button id="execute" { onclick }>{"Execute"}</button>
                 </form>
               <textarea rows=10 cols=80 readonly=true value={ output } />
             </div>

@@ -4,8 +4,14 @@
 // SPDX-License-Identifier: MIT
 //
 
+mod execution;
 mod inspection;
 mod settings;
+mod tab;
+mod tab_list;
 
+pub use execution::Execution;
 pub use inspection::Inspection;
 pub use settings::Settings;
+pub use tab::Tab;
+pub use tab_list::TabList;

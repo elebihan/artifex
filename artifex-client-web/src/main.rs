@@ -7,7 +7,7 @@
 use yew::prelude::*;
 
 use artifex_client_web::{
-    components::{Execution, Inspection, Settings, Tab, TabList},
+    components::{Execution, Inspection, Settings, Tab, TabList, Upgrade},
     contexts::ServerProvider,
 };
 
@@ -25,6 +25,9 @@ fn App() -> Html {
                 </Tab>
                 <Tab title="Execution" >
                   <Execution />
+                </Tab>
+                <Tab title="Upgrade" >
+                  <Upgrade />
                 </Tab>
               </TabList>
             </ServerProvider>

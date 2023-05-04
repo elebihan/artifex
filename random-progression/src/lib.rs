@@ -43,7 +43,7 @@ mod tests {
     #[test]
     fn basic() {
         let mut progression = RandomProgression::new();
-        while let Some(position) = progression.next() {
+        for position in progression {
             println!("Progression: {}%", position);
         }
     }

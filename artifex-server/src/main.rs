@@ -38,7 +38,7 @@ impl Artifex for ArtifexService {
         let engine = self.engine.lock().unwrap();
         let info = engine.inspect().unwrap();
         let response = InspectReply {
-            kernel_version: info.kernel_version.clone(),
+            kernel_version: info.kernel_version,
         };
         Ok(Response::new(response))
     }
@@ -78,8 +78,7 @@ impl Artifex for ArtifexService {
                     .blocking_send(Result::<_, Status>::Ok(reply))
                     .is_err()
                 {
-                    return;
-                };
+                }
             });
             let status = if res.is_ok() {
                 upgrade_reply::Status::Success as i32

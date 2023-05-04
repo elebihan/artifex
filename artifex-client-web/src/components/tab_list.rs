@@ -26,11 +26,11 @@ impl Component for TabList {
     type Properties = TabListProps;
     type Message = Msg;
 
-    fn create(ctx: &Context<Self>) -> Self {
+    fn create(_ctx: &Context<Self>) -> Self {
         TabList { active_page: 0 }
     }
 
-    fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
+    fn update(&mut self, _ctx: &Context<Self>, msg: Self::Message) -> bool {
         match msg {
             Msg::SwitchPage(index) => {
                 self.active_page = index;

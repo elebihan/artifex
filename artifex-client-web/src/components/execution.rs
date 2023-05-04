@@ -61,7 +61,7 @@ impl Component for Execution {
                     let state = match client.execute(ExecuteRequest { command }).await {
                         Ok(reply) => {
                             let reply = reply.into_inner();
-                            ExecutionState::Success(reply.stdout.clone())
+                            ExecutionState::Success(reply.stdout)
                         }
                         Err(e) => ExecutionState::Failure(e.to_string()),
                     };

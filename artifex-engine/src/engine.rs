@@ -41,11 +41,11 @@ impl Engine {
     where
         F: Fn(u8),
     {
-        let mut progression = RandomProgression::new();
+        let progression = RandomProgression::new();
         let mut rng = thread_rng();
         let delay: u16 = rng.gen_range(500..2000);
         let duration = std::time::Duration::from_millis(delay as u64);
-        while let Some(position) = progression.next() {
+        for position in progression {
             std::thread::sleep(duration);
             notify(position);
         }

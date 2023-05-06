@@ -39,6 +39,7 @@ dependencies = [
 name = "artifex-client-cli"
 version = "0.1.1"
 dependencies = [
+ "artifex-batch",
  "artifex-rpc",
  "futures",
  "tokio",

@@ -4,38 +4,24 @@
 // SPDX-License-Identifier: MIT
 //
 
+use artifex_batch::{Batch, BatchRunner, MarkupKind, MarkupReportRenderer};
 use artifex_rpc::artifex_client::ArtifexClient;
-use artifex_rpc::{ExecuteRequest, InspectRequest, UpgradeRequest};
-use tokio_stream::StreamExt;
+
+const BATCH_DEFAULT: &str = r#"
+INSPECT
+EXECUTE: date -u
+UPGRADE
+EXECUTE: uptime
+"#;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let mut client = ArtifexClient::connect("http://127.0.0.1:50051")
-        .await
-        .unwrap();
-
-    let response = client.inspect(InspectRequest {}).await?;
-    let reply = response.into_inner();
-    println!("Kernel version: {}", reply.kernel_version);
-
-    let response = client
-        .execute(ExecuteRequest {
-            command: "date -u".to_string(),
-        })
-        .await?;
-    let reply = response.into_inner();
-    println!("Date: {}", reply.stdout.trim());
-
-    let response = client.upgrade(UpgradeRequest {}).await?;
-    let mut stream = response.into_inner();
-    while let Some(reply) = stream.next().await {
-        let progress = reply?;
-        println!(
-            "Upgrade progress: {:?}, {}%",
-            progress.status(),
-            progress.position
-        );
-    }
-
+    let client = ArtifexClient::connect("http://127.0.0.1:50051").await?;
+    let batch = Batch::from_reader(BATCH_DEFAULT.as_bytes())?;
+    let mut runner = BatchRunner::new(client);
+    let report = runner.run(&batch).await?;
+    let renderer = MarkupReportRenderer::new(MarkupKind::Yaml);
+    let mut stdout = std::io::stdout().lock();
+    renderer.render(&mut stdout, &report)?;
     Ok(())
 }

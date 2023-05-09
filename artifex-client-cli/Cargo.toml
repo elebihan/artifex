@@ -7,6 +7,7 @@ license.workspace = true
 description = "Artifex client program (command line)"
 
 [dependencies]
+artifex-batch = { path = "../artifex-batch" }
 artifex-rpc = { path = "../artifex-rpc" }
 futures = "0.3.25"
 tokio = { version = "1.21.2", features = ["full"] }

@@ -4,6 +4,8 @@
 // SPDX-License-Identifier: MIT
 //
 
+use std::path::PathBuf;
+
 use artifex_batch::{Batch, BatchRunner, MarkupKind, MarkupReportRenderer};
 use artifex_rpc::artifex_client::ArtifexClient;
 use clap::Parser;
@@ -26,6 +28,8 @@ struct Cli {
         default_value = "http://127.0.0.1:50051"
     )]
     url: String,
+    #[arg(help = "Path to batch file")]
+    batch: Option<PathBuf>,
 }
 
 #[tokio::main]
@@ -33,7 +37,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args = Cli::parse();
     let endpoint = Endpoint::from_shared(args.url)?;
     let client = ArtifexClient::connect(endpoint).await?;
-    let batch = Batch::from_reader(BATCH_DEFAULT.as_bytes())?;
+    let batch = match args.batch {
+        Some(path) if path.as_os_str() == "-" => Batch::from_reader(std::io::stdin())?,
+        Some(path) => Batch::from_file(path)?,
+        None => Batch::from_reader(BATCH_DEFAULT.as_bytes())?,
+    };
     let mut runner = BatchRunner::new(client);
     let report = runner.run(&batch).await?;
     let renderer = MarkupReportRenderer::new(MarkupKind::Yaml);

@@ -4,16 +4,30 @@
 // SPDX-License-Identifier: MIT
 //
 
+use std::net::SocketAddr;
+
 use artifex_rpc::{artifex_server::ArtifexServer, FILE_DESCRIPTOR_SET};
 use artifex_server::service::ArtifexService;
+use clap::Parser;
 use http::Method;
 use tonic::transport::Server;
 use tonic_web::GrpcWebLayer;
 use tower_http::cors::{Any, CorsLayer};
 
+#[derive(Parser)]
+#[command(author, version, about, long_about = None)]
+struct Cli {
+    #[arg(short, long, help = "Address to use", default_value = "127.0.0.1")]
+    address: String,
+
+    #[arg(short, long, help = "Port to use", default_value_t = 50051)]
+    port: u16,
+}
+
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let address = "127.0.0.1:50051".parse()?;
+    let args = Cli::parse();
+    let address = SocketAddr::new(args.address.parse()?, args.port);
     let artifex = ArtifexService::default();
     let server = ArtifexServer::new(artifex);
 

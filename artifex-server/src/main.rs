@@ -4,109 +4,40 @@
 // SPDX-License-Identifier: MIT
 //
 
-use artifex_engine::Engine;
-use artifex_rpc::{
-    artifex_server::{Artifex, ArtifexServer},
-    upgrade_reply, ExecuteReply, ExecuteRequest, InspectReply, InspectRequest, UpgradeReply,
-    UpgradeRequest, FILE_DESCRIPTOR_SET,
-};
-
-use futures::Stream;
+use anyhow::{Context, Result};
+use artifex_rpc::{artifex_server::ArtifexServer, FILE_DESCRIPTOR_SET};
+use artifex_server::service::ArtifexService;
+use clap::Parser;
 use http::Method;
-use std::sync::Mutex;
-use std::{pin::Pin, sync::Arc};
-use tokio::sync::mpsc;
-use tokio::task;
-use tokio_stream::wrappers::ReceiverStream;
-use tonic::{transport::Server, Request, Response, Status};
+use std::net::SocketAddr;
+use tonic::transport::Server;
 use tonic_web::GrpcWebLayer;
 use tower_http::cors::{Any, CorsLayer};
 
-#[derive(Default)]
-pub struct ArtifexService {
-    engine: Arc<Mutex<Engine>>,
-}
+#[derive(Parser)]
+#[command(author, version, about, long_about = None)]
+struct Cli {
+    #[arg(short, long, help = "Address to use", default_value = "127.0.0.1")]
+    address: String,
 
-#[tonic::async_trait]
-impl Artifex for ArtifexService {
-    type UpgradeStream = Pin<Box<dyn Stream<Item = Result<UpgradeReply, Status>> + Send>>;
-
-    async fn inspect(
-        &self,
-        _request: Request<InspectRequest>,
-    ) -> Result<Response<InspectReply>, Status> {
-        let engine = self.engine.lock().unwrap();
-        let info = engine.inspect().unwrap();
-        let response = InspectReply {
-            kernel_version: info.kernel_version,
-        };
-        Ok(Response::new(response))
-    }
-
-    async fn execute(
-        &self,
-        request: Request<ExecuteRequest>,
-    ) -> Result<Response<ExecuteReply>, Status> {
-        let execute_req = request.into_inner();
-        let mut args = execute_req.command.split_whitespace();
-        let engine = self.engine.lock().unwrap();
-        let program = args.next().unwrap();
-        let output = engine.execute(program, args).unwrap();
-        let response = ExecuteReply {
-            code: output.code,
-            stdout: output.stdout,
-            stderr: output.stderr,
-        };
-        Ok(Response::new(response))
-    }
-
-    async fn upgrade(
-        &self,
-        _request: Request<UpgradeRequest>,
-    ) -> Result<Response<Self::UpgradeStream>, Status> {
-        let (tx, rx) = mpsc::channel(100);
-        let engine = self.engine.clone();
-        let tx_clone = tx.clone();
-        task::spawn_blocking(move || {
-            let engine = engine.lock().unwrap();
-            let res = engine.upgrade(move |position| {
-                let reply = UpgradeReply {
-                    status: upgrade_reply::Status::Running as i32,
-                    position: position as i32,
-                };
-                if tx_clone
-                    .blocking_send(Result::<_, Status>::Ok(reply))
-                    .is_err()
-                {
-                }
-            });
-            let status = if res.is_ok() {
-                upgrade_reply::Status::Success as i32
-            } else {
-                upgrade_reply::Status::Failure as i32
-            };
-            let reply = UpgradeReply {
-                status,
-                position: 100,
-            };
-            let _ = tx.blocking_send(Result::<_, Status>::Ok(reply));
-        });
-
-        let ostream = ReceiverStream::new(rx);
-        Ok(Response::new(Box::pin(ostream) as Self::UpgradeStream))
-    }
+    #[arg(short, long, help = "Port to use", default_value_t = 50051)]
+    port: u16,
 }
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let address = "127.0.0.1:50051".parse().unwrap();
+async fn main() -> Result<()> {
+    let args = Cli::parse();
+    let address = args
+        .address
+        .parse()
+        .with_context(|| "failed to parse address")?;
+    let address = SocketAddr::new(address, args.port);
     let artifex = ArtifexService::default();
     let server = ArtifexServer::new(artifex);
 
     let reflection = tonic_reflection::server::Builder::configure()
         .register_encoded_file_descriptor_set(FILE_DESCRIPTOR_SET)
-        .build()
-        .unwrap();
+        .build()?;
 
     let cors = CorsLayer::new()
         .allow_methods([Method::POST])
@@ -120,6 +51,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .add_service(server)
         .add_service(reflection)
         .serve(address)
-        .await?;
+        .await
+        .with_context(|| "failed to start server")?;
     Ok(())
 }

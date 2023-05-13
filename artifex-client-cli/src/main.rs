@@ -4,7 +4,7 @@
 // SPDX-License-Identifier: MIT
 //
 
-use std::path::PathBuf;
+use std::{fs::File, io::Write, path::PathBuf};
 
 use artifex_batch::{Batch, BatchRunner, MarkupKind, MarkupReportRenderer};
 use artifex_rpc::artifex_client::ArtifexClient;
@@ -28,13 +28,25 @@ struct Cli {
         default_value = "http://127.0.0.1:50051"
     )]
     url: String,
+    #[arg(short, long, help = "Path to report file")]
+    report: Option<PathBuf>,
     #[arg(help = "Path to batch file")]
     batch: Option<PathBuf>,
+}
+
+impl Cli {
+    fn report(&self) -> Result<Box<dyn Write>, std::io::Error> {
+        match &self.report {
+            Some(path) => File::create(path).map(|f| Box::new(f) as Box<dyn Write>),
+            None => Ok(Box::new(std::io::stdout().lock())),
+        }
+    }
 }
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args = Cli::parse();
+    let mut output = args.report()?;
     let endpoint = Endpoint::from_shared(args.url)?;
     let client = ArtifexClient::connect(endpoint).await?;
     let batch = match args.batch {
@@ -45,7 +57,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut runner = BatchRunner::new(client);
     let report = runner.run(&batch).await?;
     let renderer = MarkupReportRenderer::new(MarkupKind::Yaml);
-    let mut stdout = std::io::stdout().lock();
-    renderer.render(&mut stdout, &report)?;
+    renderer.render(&mut output, &report)?;
     Ok(())
 }

@@ -8,7 +8,11 @@ use anyhow::{Context, Result};
 use artifex_batch::{Batch, BatchRunner, MarkupKind, MarkupReportRenderer};
 use artifex_rpc::artifex_client::ArtifexClient;
 use clap::Parser;
-use std::{fs::File, io::Write, path::PathBuf};
+use std::{
+    fs::File,
+    io::{Read, Write},
+    path::PathBuf,
+};
 use tonic::transport::Endpoint;
 
 const BATCH_DEFAULT: &str = r#"
@@ -35,6 +39,13 @@ struct Cli {
 }
 
 impl Cli {
+    fn batch(&self) -> Result<Box<dyn Read>, std::io::Error> {
+        match &self.batch {
+            Some(path) if path.as_os_str() == "-" => Ok(Box::new(std::io::stdin())),
+            Some(path) => File::open(path).map(|f| Box::new(f) as Box<dyn Read>),
+            None => Ok(Box::new(BATCH_DEFAULT.as_bytes())),
+        }
+    }
     fn report(&self) -> Result<Box<dyn Write>, std::io::Error> {
         match &self.report {
             Some(path) => File::create(path).map(|f| Box::new(f) as Box<dyn Write>),
@@ -46,17 +57,14 @@ impl Cli {
 #[tokio::main]
 async fn main() -> Result<()> {
     let args = Cli::parse();
+    let input = args.batch().with_context(|| "failed to open input")?;
     let mut output = args.report().with_context(|| "failed to create report")?;
     let endpoint = Endpoint::from_shared(args.url)?;
     let client = ArtifexClient::connect(endpoint)
         .await
         .with_context(|| "failed to connect to server")?;
-    let batch = match args.batch {
-        Some(path) if path.as_os_str() == "-" => Batch::from_reader(std::io::stdin())?,
-        Some(path) => Batch::from_file(path).with_context(|| "failed to open batch")?,
-        None => Batch::from_reader(BATCH_DEFAULT.as_bytes())?,
-    };
     let mut runner = BatchRunner::new(client);
+    let batch = Batch::from_reader(input).with_context(|| "failed to open batch")?;
     let report = runner
         .run(&batch)
         .await

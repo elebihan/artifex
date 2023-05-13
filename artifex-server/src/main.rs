@@ -4,12 +4,12 @@
 // SPDX-License-Identifier: MIT
 //
 
-use std::net::SocketAddr;
-
+use anyhow::{Context, Result};
 use artifex_rpc::{artifex_server::ArtifexServer, FILE_DESCRIPTOR_SET};
 use artifex_server::service::ArtifexService;
 use clap::Parser;
 use http::Method;
+use std::net::SocketAddr;
 use tonic::transport::Server;
 use tonic_web::GrpcWebLayer;
 use tower_http::cors::{Any, CorsLayer};
@@ -25,9 +25,13 @@ struct Cli {
 }
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
+async fn main() -> Result<()> {
     let args = Cli::parse();
-    let address = SocketAddr::new(args.address.parse()?, args.port);
+    let address = args
+        .address
+        .parse()
+        .with_context(|| "failed to parse address")?;
+    let address = SocketAddr::new(address, args.port);
     let artifex = ArtifexService::default();
     let server = ArtifexServer::new(artifex);
 
@@ -47,6 +51,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .add_service(server)
         .add_service(reflection)
         .serve(address)
-        .await?;
+        .await
+        .with_context(|| "failed to start server")?;
     Ok(())
 }

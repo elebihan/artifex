@@ -7,7 +7,7 @@
 use anyhow::{Context, Result};
 use artifex_batch::{Batch, BatchRunner, MarkupKind, MarkupReportRenderer};
 use artifex_rpc::artifex_client::ArtifexClient;
-use clap::Parser;
+use clap::{Parser, ValueEnum};
 use std::{
     fs::File,
     io::{Read, Write},
@@ -22,9 +22,27 @@ UPGRADE
 EXECUTE: uptime
 "#;
 
+/// Format of the report
+#[derive(Clone, Debug, ValueEnum)]
+enum ReportFormat {
+    Xml,
+    Yaml,
+}
+
+impl Into<MarkupKind> for ReportFormat {
+    fn into(self) -> MarkupKind {
+        match self {
+            ReportFormat::Xml => MarkupKind::Xml,
+            ReportFormat::Yaml => MarkupKind::Yaml,
+        }
+    }
+}
+
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
 struct Cli {
+    #[arg(short, long, value_enum, default_value_t = ReportFormat::Yaml)]
+    format: ReportFormat,
     #[arg(
         short,
         long,
@@ -69,7 +87,7 @@ async fn main() -> Result<()> {
         .run(&batch)
         .await
         .with_context(|| "failed to run batch")?;
-    let renderer = MarkupReportRenderer::new(MarkupKind::Yaml);
+    let renderer = MarkupReportRenderer::new(args.format.into());
     renderer
         .render(&mut output, &report)
         .with_context(|| "failed to render report")?;

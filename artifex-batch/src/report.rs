@@ -125,19 +125,7 @@ mod tests {
     use super::*;
     use crate::command::CommandOutput;
 
-    const REPORT_YAML: &str = r#"# Artifex batch report
-title   : Dummy Report
-date    : 2023-05-07T09:17:58.133639582+00:00
-commands:
-- command: 'EXECUTE: date -u'
-  status : success
-  output : |
-    Sun May  7 09:17:58 UTC 2023
-- command: 'UPGRADE'
-  status : failure
-"#;
-    #[test]
-    fn render_to_yaml() {
+    fn setup_report() -> BatchReport {
         let mut report = BatchReport::new("Dummy Report");
         report
             .spoof_date("2023-05-07T09:17:58.133639582+00:00")
@@ -152,11 +140,32 @@ commands:
             command: Command::Upgrade,
             status: CommandStatus::Failure,
         });
-        let renderer = MarkupReportRenderer::new(MarkupKind::Yaml);
+        report
+    }
+
+    fn render_to_markup(markup_kind: MarkupKind, reference: &str) {
+        let report = setup_report();
+        let renderer = MarkupReportRenderer::new(markup_kind);
         let mut buffer: Vec<u8> = vec![];
         let res = renderer.render(&mut buffer, &report);
         assert!(res.is_ok());
         let text = String::from_utf8(buffer).unwrap();
-        assert_eq!(REPORT_YAML, text);
+        assert_eq!(reference, text);
+    }
+
+    const REPORT_YAML: &str = r#"# Artifex batch report
+title   : Dummy Report
+date    : 2023-05-07T09:17:58.133639582+00:00
+commands:
+- command: 'EXECUTE: date -u'
+  status : success
+  output : |
+    Sun May  7 09:17:58 UTC 2023
+- command: 'UPGRADE'
+  status : failure
+"#;
+    #[test]
+    fn render_to_yaml() {
+        render_to_markup(MarkupKind::Yaml, REPORT_YAML);
     }
 }

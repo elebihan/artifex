@@ -71,6 +71,7 @@ pub struct MarkupReportRenderer {
 /// Kind of supported markup formats.
 #[derive(Debug)]
 pub enum MarkupKind {
+    Xml,
     Yaml,
 }
 
@@ -83,6 +84,7 @@ impl MarkupReportRenderer {
     /// Render a report.
     pub fn render<W: Write>(&self, writer: &mut W, report: &BatchReport) -> Result<(), Error> {
         match self.markup_kind {
+            MarkupKind::Xml => Self::render_as_xml(writer, report),
             MarkupKind::Yaml => Self::render_as_yaml(writer, report),
         }
     }
@@ -116,6 +118,43 @@ impl MarkupReportRenderer {
                 }
             }
         }
+        Ok(())
+    }
+
+    fn render_as_xml<W: Write>(writer: &mut W, report: &BatchReport) -> Result<(), Error> {
+        writeln!(writer, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>")?;
+        writeln!(writer, "<report>")?;
+        writeln!(
+            writer,
+            "  <title>{}</title>\n  <date>{}</date>\n  <commands>",
+            report.title(),
+            report.date().to_rfc3339()
+        )?;
+        for entry in &report.entries {
+            writeln!(
+                writer,
+                "    <command>\n      <input><![CDATA[{}]]></input>",
+                entry.command
+            )?;
+            let (status, output) = match &entry.status {
+                CommandStatus::Failure => ("failure", None),
+                CommandStatus::Success(output) => ("success", output.as_ref()),
+            };
+            writeln!(writer, "      <status>{}</status>", status)?;
+            if let Some(output) = output {
+                match output {
+                    CommandOutput::String(text) => {
+                        writeln!(writer, "      <output><![CDATA[{}]]></output>", text)?;
+                    }
+                    CommandOutput::Uint32(number) => {
+                        writeln!(writer, "      <output>{}</output>", number)?;
+                    }
+                };
+            }
+            writeln!(writer, "    </command>")?;
+        }
+        writeln!(writer, "  </commands>")?;
+        writeln!(writer, "</report>")?;
         Ok(())
     }
 }
@@ -167,5 +206,28 @@ commands:
     #[test]
     fn render_to_yaml() {
         render_to_markup(MarkupKind::Yaml, REPORT_YAML);
+    }
+
+    const REPORT_XML: &str = r#"<?xml version="1.0" encoding="UTF-8"?>
+<report>
+  <title>Dummy Report</title>
+  <date>2023-05-07T09:17:58.133639582+00:00</date>
+  <commands>
+    <command>
+      <input><![CDATA[EXECUTE: date -u]]></input>
+      <status>success</status>
+      <output><![CDATA[Sun May  7 09:17:58 UTC 2023]]></output>
+    </command>
+    <command>
+      <input><![CDATA[UPGRADE]]></input>
+      <status>failure</status>
+    </command>
+  </commands>
+</report>
+"#;
+
+    #[test]
+    fn render_to_xml() {
+        render_to_markup(MarkupKind::Xml, REPORT_XML);
     }
 }

@@ -28,6 +28,12 @@ impl RandomProgression {
     }
 }
 
+impl Default for RandomProgression {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl std::iter::Iterator for RandomProgression {
     type Item = u8;
 
@@ -42,7 +48,7 @@ mod tests {
 
     #[test]
     fn basic() {
-        let mut progression = RandomProgression::new();
+        let progression = RandomProgression::new();
         for position in progression {
             println!("Progression: {}%", position);
         }

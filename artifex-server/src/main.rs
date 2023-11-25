@@ -8,11 +8,9 @@ use anyhow::{Context, Result};
 use artifex_rpc::{artifex_server::ArtifexServer, FILE_DESCRIPTOR_SET};
 use artifex_server::service::ArtifexService;
 use clap::Parser;
-use http::Method;
 use std::net::SocketAddr;
 use tonic::transport::Server;
-use tonic_web::GrpcWebLayer;
-use tower_http::cors::{Any, CorsLayer};
+use tonic_web;
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
@@ -39,16 +37,11 @@ async fn main() -> Result<()> {
         .register_encoded_file_descriptor_set(FILE_DESCRIPTOR_SET)
         .build()?;
 
-    let cors = CorsLayer::new()
-        .allow_methods([Method::POST])
-        .allow_headers(Any)
-        .allow_origin(Any);
+    let artifex = tonic_web::enable(server);
 
     Server::builder()
         .accept_http1(true)
-        .layer(cors)
-        .layer(GrpcWebLayer::new())
-        .add_service(server)
+        .add_service(artifex)
         .add_service(reflection)
         .serve(address)
         .await

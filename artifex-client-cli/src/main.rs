@@ -29,9 +29,9 @@ enum ReportFormat {
     Yaml,
 }
 
-impl Into<MarkupKind> for ReportFormat {
-    fn into(self) -> MarkupKind {
-        match self {
+impl From<ReportFormat> for MarkupKind {
+    fn from(val: ReportFormat) -> Self {
+        match val {
             ReportFormat::Xml => MarkupKind::Xml,
             ReportFormat::Yaml => MarkupKind::Yaml,
         }

@@ -10,7 +10,7 @@ use artifex_server::service::ArtifexService;
 use clap::Parser;
 use std::net::SocketAddr;
 use tonic::transport::Server;
-use tonic_web;
+
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]

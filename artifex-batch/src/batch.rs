@@ -45,7 +45,7 @@ impl Batch {
         let reader = BufReader::new(reader);
         let commands: Result<Vec<Command>, Error> = reader
             .lines()
-            .filter_map(Result::ok)
+            .map_while(Result::ok)
             .filter(|l| !l.starts_with('#'))
             .filter(|l| !l.is_empty())
             .map(|l| Command::from_str(&l).map_err(Error::Syntax))

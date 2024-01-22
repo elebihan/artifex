@@ -1,2 +1,2 @@
 target/*
-artifex-client-web/dist/*
+artifex-client-web*/dist/*

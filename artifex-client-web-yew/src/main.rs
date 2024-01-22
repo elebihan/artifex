@@ -6,7 +6,7 @@
 
 use yew::prelude::*;
 
-use artifex_client_web::{
+use artifex_client_web_yew::{
     components::{Execution, Inspection, Settings, Tab, TabList, Upgrade},
     contexts::ServerProvider,
 };

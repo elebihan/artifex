@@ -7,6 +7,7 @@ members = [
   "artifex-rpc",
   "artifex-server",
   "random-progression",
+  "xtask",
 ]
 resolver = "2"
 

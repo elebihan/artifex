@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+
+# set -euo pipefail
+
+IS_AMEND=$(ps -ocommand= -p ${PPID} | grep -e '--amend');
+
+if [ -n "${IS_AMEND}" ]; then
+    exit 0;
+fi
+
+declare -A checks=(
+    [style]="cargo fmt --all -- --check"
+)
+
+function check() {
+    local label=$1
+    local cmd=$2
+    echo "🔍 Checking ${label}..."
+    eval "${cmd}"
+    if test $? != 0; then
+        echo "❌ Checking ${label} failed!"
+        echo "Please fix the above issues."
+        exit 1
+    else
+        echo "✅ Checking ${label} pass!"
+    fi
+}
+
+for key in "${!checks[@]}"; do
+    check "${key}" "${checks[${key}]}"
+done

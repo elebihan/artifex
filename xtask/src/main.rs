@@ -41,6 +41,7 @@ fn install_hooks(shell: &Shell) -> Result<(), Box<dyn Error>> {
 }
 
 fn prepare(shell: &Shell) -> Result<(), Box<dyn Error>> {
+    println!("🥁 Preparing build environment...");
     install_hooks(shell)
 }
 

@@ -10,18 +10,33 @@ use xshell::Shell;
 
 fn install_hooks(shell: &Shell) -> Result<(), Box<dyn Error>> {
     let cwd = shell.current_dir();
-    let mut src = cwd.join("hooks");
-    src.push("pre-commit.hook");
-    let name = src
-        .file_stem()
-        .ok_or_else(|| "Missing file stem".to_string())?;
-    let mut dst = cwd.join(".git");
-    dst.push("hooks");
-    dst.push(name);
-    shell.copy_file(src, &dst)?;
-    let mut permissions = fs::metadata(&dst)?.permissions();
-    permissions.set_mode(0o755);
-    fs::set_permissions(dst, permissions)?;
+    let src = cwd.join("hooks");
+    let hooks = fs::read_dir(src)?
+        .filter_map(|e| e.ok())
+        .filter_map(|e| match e.file_type() {
+            Ok(t) if t.is_file() => Some(e),
+            _ => None,
+        })
+        .filter_map(|e| {
+            let path = e.path();
+            match path.extension() {
+                Some(e) if e == "hook" => Some(path),
+                _ => None,
+            }
+        });
+    for hook in hooks {
+        let name = hook
+            .file_stem()
+            .ok_or_else(|| "Missing file stem".to_string())?;
+        let mut dst = cwd.join(".git");
+        dst.push("hooks");
+        dst.push(name);
+        println!("📂 Installing Git hook: {}", &hook.display());
+        shell.copy_file(hook, &dst)?;
+        let mut permissions = fs::metadata(&dst)?.permissions();
+        permissions.set_mode(0o755);
+        fs::set_permissions(dst, permissions)?;
+    }
     Ok(())
 }
 

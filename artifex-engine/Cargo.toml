@@ -10,3 +10,4 @@ random-progression = { path = "../random-progression" }
 libc = "0.2.150"
 thiserror = "1.0.50"
 rand = "0.8.5"
+nix = { version = "0.28.0", features = ["feature"] }

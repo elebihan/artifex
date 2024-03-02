@@ -4,33 +4,14 @@
 // SPDX-License-Identifier: MIT
 //
 
-use crate::error::{Error, Result};
-
-// From https://github.com/GuillaumeGomez/sysinfo/blob/master/src/linux/system.rs
-fn get_kernel_version() -> Option<String> {
-    let mut raw = std::mem::MaybeUninit::<libc::utsname>::zeroed();
-
-    unsafe {
-        if libc::uname(raw.as_mut_ptr()) == 0 {
-            let info = raw.assume_init();
-            let release = info
-                .release
-                .iter()
-                .filter(|c| **c != 0)
-                .map(|c| *c as u8 as char)
-                .collect::<String>();
-            Some(release)
-        } else {
-            None
-        }
-    }
-}
+use crate::error::Result;
+use nix::sys::utsname::uname;
 
 pub struct MachineInfo {
     pub kernel_version: String,
 }
 
 pub fn get_machine_info() -> Result<MachineInfo> {
-    let kernel_version = get_kernel_version().ok_or(Error::Unknown)?;
+    let kernel_version = uname().map(|u| u.release().to_string_lossy().to_string())?;
     Ok(MachineInfo { kernel_version })
 }

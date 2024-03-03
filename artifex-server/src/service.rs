@@ -35,6 +35,7 @@ impl Artifex for ArtifexService {
         let info = engine.inspect().unwrap();
         let response = InspectReply {
             kernel_version: info.kernel_version,
+            system_uptime: info.system_uptime.as_secs(),
         };
         Ok(Response::new(response))
     }

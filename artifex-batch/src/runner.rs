@@ -13,7 +13,8 @@ use crate::{
 
 use artifex_rpc::{artifex_client::ArtifexClient, ExecuteRequest, InspectRequest, UpgradeRequest};
 use futures_util::StreamExt;
-use std::fmt::Write;
+use humantime::format_duration;
+use std::{fmt::Write, time::Duration};
 use uuid::Uuid;
 
 /// Run commands via a client.
@@ -39,7 +40,11 @@ impl CommandRunner {
             Command::Inspect => {
                 let response = self.client.inspect(InspectRequest {}).await?;
                 let reply = response.into_inner();
-                let output = format!("kernel version: {}", reply.kernel_version);
+                let output = format!(
+                    "kernel version: {}\nsystem uptime: {}",
+                    reply.kernel_version,
+                    format_duration(Duration::from_secs(reply.system_uptime))
+                );
                 CommandStatus::Success(Some(CommandOutput::String(output)))
             }
             Command::Upgrade => {

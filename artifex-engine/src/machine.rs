@@ -5,13 +5,19 @@
 //
 
 use crate::error::Result;
-use nix::sys::utsname::uname;
+use nix::sys::{sysinfo::sysinfo, utsname::uname};
+use std::time::Duration;
 
 pub struct MachineInfo {
     pub kernel_version: String,
+    pub system_uptime: Duration,
 }
 
 pub fn get_machine_info() -> Result<MachineInfo> {
     let kernel_version = uname().map(|u| u.release().to_string_lossy().to_string())?;
-    Ok(MachineInfo { kernel_version })
+    let system_uptime = sysinfo().map(|i| i.uptime())?;
+    Ok(MachineInfo {
+        kernel_version,
+        system_uptime,
+    })
 }

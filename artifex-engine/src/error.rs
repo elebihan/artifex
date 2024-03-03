@@ -10,6 +10,8 @@ use thiserror::Error;
 pub enum Error {
     #[error("I/O error: {0}")]
     Io(#[from] std::io::Error),
+    #[error("Unix error: {0}")]
+    Nix(#[from] nix::Error),
     #[error("Unknown error")]
     Unknown,
     #[error("UTF-8 decoding/encoding error")]

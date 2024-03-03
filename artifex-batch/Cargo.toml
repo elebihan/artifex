@@ -13,3 +13,4 @@ thiserror = "1.0.50"
 futures-util = "0.3.29"
 chrono = "0.4.31"
 uuid = { version = "1.6.1", features = ["v4", "fast-rng"] }
+humantime = "2.1.0"

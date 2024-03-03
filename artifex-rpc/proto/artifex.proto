@@ -24,6 +24,8 @@ message InspectRequest {}
 message InspectReply {
 	// The version of the kernel the machine is running on
 	string kernel_version = 1;
+	// The time since system boot, in seconds.
+	uint64 system_uptime = 2;
 }
 
 message ExecuteRequest {

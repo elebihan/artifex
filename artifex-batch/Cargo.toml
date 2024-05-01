@@ -8,7 +8,7 @@ description = "Artifex command batch management for clients"
 
 [dependencies]
 artifex-rpc = { path = "../artifex-rpc" }
-tonic = "0.10.2"
+tonic = "0.11.0"
 thiserror = "1.0.50"
 futures-util = "0.3.29"
 chrono = "0.4.31"

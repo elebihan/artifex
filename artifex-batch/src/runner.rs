@@ -19,11 +19,17 @@ use uuid::Uuid;
 
 /// Run commands via a client.
 #[derive(Debug)]
-pub(crate) struct CommandRunner {
-    client: ArtifexClient<tonic::transport::Channel>,
+pub(crate) struct CommandRunner<T> {
+    client: ArtifexClient<T>,
 }
 
-impl CommandRunner {
+impl<T> CommandRunner<T>
+where
+    T: tonic::client::GrpcService<tonic::body::BoxBody>,
+    T::ResponseBody: tonic::codegen::Body<Data = tonic::codegen::Bytes> + Send + 'static,
+    T::Error: Into<tonic::codegen::StdError>,
+    <T::ResponseBody as tonic::codegen::Body>::Error: Into<tonic::codegen::StdError> + Send,
+{
     /// Run a command and return its output.
     pub(crate) async fn run(&mut self, command: &Command) -> Result<CommandStatus, Error> {
         let status = match command {
@@ -69,13 +75,19 @@ impl CommandRunner {
 
 /// Allow to run batches of commands via a client.
 #[derive(Debug)]
-pub struct BatchRunner {
-    inner: CommandRunner,
+pub struct BatchRunner<T> {
+    inner: CommandRunner<T>,
 }
 
-impl BatchRunner {
+impl<T> BatchRunner<T>
+where
+    T: tonic::client::GrpcService<tonic::body::BoxBody>,
+    T::ResponseBody: tonic::codegen::Body<Data = tonic::codegen::Bytes> + Send + 'static,
+    T::Error: Into<tonic::codegen::StdError>,
+    <T::ResponseBody as tonic::codegen::Body>::Error: Into<tonic::codegen::StdError> + Send,
+{
     /// Build a `BatchRunner` associated to a `ArtifexClient`
-    pub fn new(client: ArtifexClient<tonic::transport::Channel>) -> Self {
+    pub fn new(client: ArtifexClient<T>) -> Self {
         Self {
             inner: CommandRunner { client },
         }

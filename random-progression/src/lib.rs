@@ -4,7 +4,10 @@
 // SPDX-License-Identifier: MIT
 //
 
-use rand::{distributions::Uniform, thread_rng, Rng};
+use rand::{
+    distr::{Distribution, Uniform},
+    Rng,
+};
 use std::collections::VecDeque;
 
 pub struct RandomProgression {
@@ -13,12 +16,10 @@ pub struct RandomProgression {
 
 impl RandomProgression {
     pub fn new() -> Self {
-        let mut rng = thread_rng();
-        let count = rng.gen_range(1..10);
-        let mut positions: Vec<u8> = (&mut rng)
-            .sample_iter(Uniform::new(1, 99))
-            .take(count)
-            .collect();
+        let mut rng = rand::rng();
+        let count = rng.random_range(1..10);
+        let positions_range = Uniform::new_inclusive(1, 99).expect("Uniform range should be valid");
+        let mut positions: Vec<u8> = positions_range.sample_iter(&mut rng).take(count).collect();
         positions.push(100);
         positions.sort();
 

@@ -6,7 +6,7 @@
 
 use crate::error::Result;
 use crate::machine::{get_machine_info, MachineInfo};
-use rand::{thread_rng, Rng};
+use rand::{self, Rng};
 use random_progression::RandomProgression;
 use std::ffi::OsStr;
 
@@ -42,8 +42,8 @@ impl Engine {
         F: Fn(u8),
     {
         let progression = RandomProgression::new();
-        let mut rng = thread_rng();
-        let delay: u16 = rng.gen_range(500..2000);
+        let mut rng = rand::rng();
+        let delay: u16 = rng.random_range(500..2000);
         let duration = std::time::Duration::from_millis(delay as u64);
         for position in progression {
             std::thread::sleep(duration);

@@ -78,10 +78,10 @@ async fn main() -> Result<()> {
     let input = args.batch().with_context(|| "failed to open input")?;
     let mut output = args.report().with_context(|| "failed to create report")?;
     let endpoint = Endpoint::from_shared(args.url)?;
-    let client = ArtifexClient::connect(endpoint)
+    let mut client = ArtifexClient::connect(endpoint)
         .await
         .with_context(|| "failed to connect to server")?;
-    let mut runner = BatchRunner::new(client);
+    let mut runner = BatchRunner::new(&mut client);
     let batch = Batch::from_reader(input).with_context(|| "failed to open batch")?;
     let report = runner
         .run(&batch)

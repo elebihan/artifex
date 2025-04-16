@@ -19,11 +19,11 @@ use uuid::Uuid;
 
 /// Run commands via a client.
 #[derive(Debug)]
-pub(crate) struct CommandRunner<T> {
-    client: ArtifexClient<T>,
+pub(crate) struct CommandRunner<'a, T> {
+    client: &'a mut ArtifexClient<T>,
 }
 
-impl<T> CommandRunner<T>
+impl<T> CommandRunner<'_, T>
 where
     T: tonic::client::GrpcService<tonic::body::BoxBody>,
     T::ResponseBody: tonic::codegen::Body<Data = tonic::codegen::Bytes> + Send + 'static,
@@ -75,11 +75,11 @@ where
 
 /// Allow to run batches of commands via a client.
 #[derive(Debug)]
-pub struct BatchRunner<T> {
-    inner: CommandRunner<T>,
+pub struct BatchRunner<'a, T> {
+    inner: CommandRunner<'a, T>,
 }
 
-impl<T> BatchRunner<T>
+impl<'a, T> BatchRunner<'a, T>
 where
     T: tonic::client::GrpcService<tonic::body::BoxBody>,
     T::ResponseBody: tonic::codegen::Body<Data = tonic::codegen::Bytes> + Send + 'static,
@@ -87,7 +87,7 @@ where
     <T::ResponseBody as tonic::codegen::Body>::Error: Into<tonic::codegen::StdError> + Send,
 {
     /// Build a `BatchRunner` associated to a `ArtifexClient`
-    pub fn new(client: ArtifexClient<T>) -> Self {
+    pub fn new(client: &'a mut ArtifexClient<T>) -> Self {
         Self {
             inner: CommandRunner { client },
         }

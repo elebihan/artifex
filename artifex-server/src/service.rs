@@ -47,14 +47,21 @@ impl Artifex for ArtifexService {
         let execute_req = request.into_inner();
         let mut args = execute_req.command.split_whitespace();
         let engine = self.engine.lock().unwrap();
-        let program = args.next().unwrap();
-        let output = engine.execute(program, args).unwrap();
-        let response = ExecuteReply {
-            code: output.code,
-            stdout: output.stdout,
-            stderr: output.stderr,
-        };
-        Ok(Response::new(response))
+        if let Some(program) = args.next() {
+            engine
+                .execute(program, args)
+                .map_err(|e| Status::internal(e.to_string()))
+                .map(|output| {
+                    let response = ExecuteReply {
+                        code: output.code,
+                        stdout: output.stdout,
+                        stderr: output.stderr,
+                    };
+                    Response::new(response)
+                })
+        } else {
+            Err(Status::invalid_argument("Missing program name"))
+        }
     }
 
     async fn upgrade(

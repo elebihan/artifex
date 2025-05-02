@@ -4,7 +4,8 @@
 // SPDX-License-Identifier: MIT
 //
 
-use crate::error::Result;
+use crate::config::Config;
+use crate::error::{Error, Result};
 use crate::machine::{get_machine_info, MachineInfo};
 use rand::{self, Rng};
 use random_progression::RandomProgression;
@@ -17,9 +18,16 @@ pub struct ProgramOutput {
 }
 
 #[derive(Default)]
-pub struct Engine;
+pub struct Engine {
+    config: Config,
+}
 
 impl Engine {
+    /// Create a new `Engine` with the configuration `config`.
+    pub fn with_config(config: Config) -> Self {
+        Self { config }
+    }
+
     pub fn inspect(&self) -> Result<MachineInfo> {
         get_machine_info()
     }
@@ -29,12 +37,20 @@ impl Engine {
         I: IntoIterator<Item = S>,
         S: AsRef<OsStr>,
     {
-        let output = std::process::Command::new(program).args(args).output()?;
-        Ok(ProgramOutput {
-            code: output.status.code().unwrap_or(-1),
-            stdout: std::str::from_utf8(&output.stdout)?.into(),
-            stderr: std::str::from_utf8(&output.stderr)?.into(),
-        })
+        if let Some(program) = self
+            .config
+            .allowed_programs()
+            .find(|p| *p == program.as_ref())
+        {
+            let output = std::process::Command::new(program).args(args).output()?;
+            Ok(ProgramOutput {
+                code: output.status.code().unwrap_or(-1),
+                stdout: std::str::from_utf8(&output.stdout)?.into(),
+                stderr: std::str::from_utf8(&output.stderr)?.into(),
+            })
+        } else {
+            Err(Error::Internal("Program not allowed".to_string()))
+        }
     }
 
     pub fn upgrade<F>(&self, notify: F) -> Result<()>
@@ -59,7 +75,7 @@ mod tests {
 
     #[test]
     fn do_progressive_stuff() {
-        let engine = Engine {};
+        let engine = Engine::default();
         let res = engine.upgrade(|position| {
             println!("Progression: {}%", position);
         });

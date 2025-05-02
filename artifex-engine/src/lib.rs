@@ -4,10 +4,12 @@
 // SPDX-License-Identifier: MIT
 //
 
+mod config;
 mod engine;
 mod error;
 mod machine;
 
+pub use config::Config;
 pub use engine::Engine;
 pub use error::{Error, Result};
 pub use machine::MachineInfo;

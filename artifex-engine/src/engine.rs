@@ -10,6 +10,7 @@ use crate::machine::{get_machine_info, MachineInfo};
 use rand::{self, Rng};
 use random_progression::RandomProgression;
 use std::ffi::OsStr;
+use std::path::Path;
 
 pub struct ProgramOutput {
     pub code: i32,
@@ -37,11 +38,9 @@ impl Engine {
         I: IntoIterator<Item = S>,
         S: AsRef<OsStr>,
     {
-        if let Some(program) = self
-            .config
-            .allowed_programs()
-            .find(|p| *p == program.as_ref())
-        {
+        let program = program.as_ref();
+        let program = Path::new(program).file_name().unwrap_or(program);
+        if let Some(program) = self.config.allowed_programs().find(|p| *p == program) {
             let output = std::process::Command::new(program).args(args).output()?;
             Ok(ProgramOutput {
                 code: output.status.code().unwrap_or(-1),

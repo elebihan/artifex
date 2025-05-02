@@ -4,7 +4,7 @@
 // SPDX-License-Identifier: MIT
 //
 
-use artifex_engine::Engine;
+use artifex_engine::{Config, Engine};
 use artifex_rpc::{
     artifex_server::Artifex, upgrade_reply, ExecuteReply, ExecuteRequest, InspectReply,
     InspectRequest, UpgradeReply, UpgradeRequest,
@@ -21,6 +21,15 @@ use tonic::{Request, Response, Status};
 #[derive(Default)]
 pub struct ArtifexService {
     engine: Arc<Mutex<Engine>>,
+}
+
+impl ArtifexService {
+    /// Create a new service using an engine configuration.
+    pub fn with_engine_config(config: Config) -> Self {
+        Self {
+            engine: Arc::new(Mutex::new(Engine::with_config(config))),
+        }
+    }
 }
 
 #[tonic::async_trait]

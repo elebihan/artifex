@@ -5,6 +5,7 @@
 //
 
 mod config;
+mod tls;
 
 use anyhow::{Context, Result};
 use artifex_batch::{Batch, BatchRunner, MarkupKind, MarkupReportRenderer};
@@ -15,7 +16,7 @@ use std::{
     io::{Read, Write},
     path::PathBuf,
 };
-use tonic::transport::Endpoint;
+use tonic::transport::Channel;
 
 use config::Config;
 
@@ -63,6 +64,27 @@ struct Cli {
     url: Option<String>,
     #[arg(short = 'R', long, help = "Path to report file", value_name = "FILE")]
     report: Option<PathBuf>,
+    #[arg(
+        short = 'r',
+        long,
+        help = "Root certificate authority file",
+        value_name = "FILE"
+    )]
+    pub root_cert: Option<PathBuf>,
+    #[arg(
+        short = 'c',
+        long,
+        help = "Client certificate file",
+        value_name = "FILE"
+    )]
+    pub client_cert: Option<PathBuf>,
+    #[arg(
+        short = 'k',
+        long,
+        help = "Client private key file",
+        value_name = "FILE"
+    )]
+    pub client_key: Option<PathBuf>,
     #[arg(help = "Path to batch file")]
     batch: Option<PathBuf>,
 }
@@ -94,10 +116,26 @@ async fn main() -> Result<()> {
     let input = args.batch().with_context(|| "failed to open input")?;
     let mut output = args.report().with_context(|| "failed to create report")?;
     let url = args.url.unwrap_or(config.url);
-    let endpoint = Endpoint::from_shared(url)?;
-    let mut client = ArtifexClient::connect(endpoint)
+    let tls = if let Some(("https", _)) = url.split_once("://") {
+        let tls = tls::create_client_config(&config.tls)
+            .with_context(|| "failed to create TLS client configuration")?;
+        Some(tls)
+    } else {
+        None
+    };
+    let channel = Channel::from_shared(url).with_context(|| "failed to create channel")?;
+    let channel = if let Some(tls) = tls {
+        channel
+            .tls_config(tls)
+            .with_context(|| "failed to set TLS client configuration")?
+    } else {
+        channel
+    };
+    let conn = channel
+        .connect()
         .await
         .with_context(|| "failed to connect to server")?;
+    let mut client = ArtifexClient::new(conn);
     let mut runner = BatchRunner::new(&mut client);
     let batch = Batch::from_reader(input).with_context(|| "failed to open batch")?;
     let report = runner

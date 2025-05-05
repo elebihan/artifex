@@ -4,6 +4,8 @@
 // SPDX-License-Identifier: MIT
 //
 
+mod config;
+
 use anyhow::{Context, Result};
 use artifex_batch::{Batch, BatchRunner, MarkupKind, MarkupReportRenderer};
 use artifex_rpc::artifex_client::ArtifexClient;
@@ -14,6 +16,8 @@ use std::{
     path::PathBuf,
 };
 use tonic::transport::Endpoint;
+
+use config::Config;
 
 const BATCH_DEFAULT: &str = r#"
 INSPECT
@@ -41,15 +45,22 @@ impl From<ReportFormat> for MarkupKind {
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
 struct Cli {
-    #[arg(short ='F', long, value_enum, default_value_t = ReportFormat::Yaml)]
-    format: ReportFormat,
+    #[arg(
+        short = 'C',
+        long,
+        help = "Path to configuration file",
+        value_name = "FILE"
+    )]
+    config: Option<PathBuf>,
+    #[arg(short = 'F', long, value_enum)]
+    format: Option<ReportFormat>,
     #[arg(
         short = 'U',
         long,
         help = "URL of the server",
-        default_value = "http://127.0.0.1:50051"
+        default_value = Config::DEFAULT_URL
     )]
-    url: String,
+    url: Option<String>,
     #[arg(short = 'R', long, help = "Path to report file", value_name = "FILE")]
     report: Option<PathBuf>,
     #[arg(help = "Path to batch file")]
@@ -75,9 +86,15 @@ impl Cli {
 #[tokio::main]
 async fn main() -> Result<()> {
     let args = Cli::parse();
+    let config = if let Some(path) = &args.config {
+        Config::with_path(path)?
+    } else {
+        Config::default()
+    };
     let input = args.batch().with_context(|| "failed to open input")?;
     let mut output = args.report().with_context(|| "failed to create report")?;
-    let endpoint = Endpoint::from_shared(args.url)?;
+    let url = args.url.unwrap_or(config.url);
+    let endpoint = Endpoint::from_shared(url)?;
     let mut client = ArtifexClient::connect(endpoint)
         .await
         .with_context(|| "failed to connect to server")?;
@@ -87,7 +104,8 @@ async fn main() -> Result<()> {
         .run(&batch)
         .await
         .with_context(|| "failed to run batch")?;
-    let renderer = MarkupReportRenderer::new(args.format.into());
+    let format = args.format.map(ReportFormat::into).unwrap_or(config.format);
+    let renderer = MarkupReportRenderer::new(format);
     renderer
         .render(&mut output, &report)
         .with_context(|| "failed to render report")?;

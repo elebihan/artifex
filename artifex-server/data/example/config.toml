@@ -1,4 +1,4 @@
 address = "127.0.0.1"
 port = 50051
 [engine]
-allowed_programs = ["date", "uname"]
+allowed_programs = ["date", "uname", "uptime"]

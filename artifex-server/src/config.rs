@@ -5,11 +5,12 @@
 //
 
 use crate::error::Error;
+use crate::tls::Config as TlsConfig;
 use artifex_engine::Config as EngineConfig;
 use serde::Deserialize;
 use std::path::Path;
 
-/// Hold the configuration of the engine.
+/// Hold the configuration of the server.
 #[derive(Debug, Deserialize, PartialEq)]
 pub struct Config {
     /// Address to use.
@@ -18,6 +19,8 @@ pub struct Config {
     pub port: u16,
     /// Configuration of the engine.
     pub engine: EngineConfig,
+    /// Configuration of TLS.
+    pub tls: TlsConfig,
 }
 
 impl Default for Config {
@@ -26,6 +29,7 @@ impl Default for Config {
             address: Self::DEFAULT_ADDRESS.to_string(),
             port: Self::DEFAULT_PORT,
             engine: EngineConfig::default(),
+            tls: TlsConfig::default(),
         }
     }
 }

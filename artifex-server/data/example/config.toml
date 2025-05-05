@@ -2,3 +2,7 @@ address = "127.0.0.1"
 port = 50051
 [engine]
 allowed_programs = ["date", "uname", "uptime"]
+[tls]
+root_cert = "./tests/data/tls/root.crt.pem"
+server_cert = "./tests/data/tls/server.crt.pem"
+server_key = "./tests/data/tls/server.key.pem"

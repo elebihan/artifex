@@ -12,7 +12,7 @@ artifex-rpc = { path = "../artifex-rpc" }
 futures = "0.3.29"
 tokio = { version = "1.34.0", features = ["full"] }
 tokio-stream = { version = "0.1.14", features = ["net"] }
-tonic = "0.11.0"
+tonic = { version = "0.11.0", features = ["tls"] }
 tonic-reflection = "0.11.0"
 tonic-web = "0.11.0"
 clap = { version = "4.4.8", features = ["derive"] }

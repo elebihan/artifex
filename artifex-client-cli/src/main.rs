@@ -41,16 +41,16 @@ impl From<ReportFormat> for MarkupKind {
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
 struct Cli {
-    #[arg(short, long, value_enum, default_value_t = ReportFormat::Yaml)]
+    #[arg(short ='F', long, value_enum, default_value_t = ReportFormat::Yaml)]
     format: ReportFormat,
     #[arg(
-        short,
+        short = 'U',
         long,
         help = "URL of the server",
         default_value = "http://127.0.0.1:50051"
     )]
     url: String,
-    #[arg(short, long, help = "Path to report file")]
+    #[arg(short = 'R', long, help = "Path to report file", value_name = "FILE")]
     report: Option<PathBuf>,
     #[arg(help = "Path to batch file")]
     batch: Option<PathBuf>,

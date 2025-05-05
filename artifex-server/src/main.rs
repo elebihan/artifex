@@ -11,6 +11,8 @@ use clap::Parser;
 use std::net::SocketAddr;
 use std::path::PathBuf;
 use tonic::transport::Server;
+use tracing_subscriber::layer::SubscriberExt;
+use tracing_subscriber::util::SubscriberInitExt;
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
@@ -50,6 +52,12 @@ async fn main() -> Result<()> {
         .build()?;
 
     let artifex = tonic_web::enable(server);
+
+    tracing_subscriber::registry()
+        .with(tracing_subscriber::fmt::layer())
+        .with(tracing_subscriber::EnvFilter::from_default_env())
+        .try_init()
+        .with_context(|| "Failed to init tracing")?;
 
     Server::builder()
         .accept_http1(true)

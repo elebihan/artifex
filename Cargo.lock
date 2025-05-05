@@ -107,6 +107,7 @@ dependencies = [
  "getrandom 0.3.2",
  "http-body 1.0.1",
  "humantime",
+ "serde",
  "thiserror 1.0.69",
  "tonic",
  "uuid",

@@ -5,6 +5,7 @@
 //
 
 use chrono::prelude::*;
+use serde::Deserialize;
 use std::io::Write;
 
 use crate::command::{Command, CommandOutput, CommandStatus};
@@ -69,7 +70,7 @@ pub struct MarkupReportRenderer {
 }
 
 /// Kind of supported markup formats.
-#[derive(Debug)]
+#[derive(Debug, Deserialize, PartialEq)]
 pub enum MarkupKind {
     Xml,
     Yaml,

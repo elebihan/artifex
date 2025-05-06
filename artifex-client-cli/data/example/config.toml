@@ -1,2 +1,6 @@
 format = "Yaml"
-url = "http://127.0.0.1:50051"
+url = "https://127.0.0.1:50051"
+[tls]
+root_cert = "./tests/data/tls/root.crt.pem"
+client_cert = "./tests/data/tls/client.crt.pem"
+client_key = "./tests/data/tls/client.key.pem"

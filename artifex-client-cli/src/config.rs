@@ -4,6 +4,7 @@
 // SPDX-License-Identifier: MIT
 //
 
+use super::tls::Config as TlsConfig;
 use artifex_batch::MarkupKind;
 use serde::Deserialize;
 use std::path::Path;
@@ -25,6 +26,8 @@ pub struct Config {
     pub format: MarkupKind,
     /// URL of the client.
     pub url: String,
+    /// Configuration of TLS.
+    pub tls: TlsConfig,
 }
 
 impl Default for Config {
@@ -32,13 +35,14 @@ impl Default for Config {
         Self {
             format: MarkupKind::Yaml,
             url: Self::DEFAULT_URL.to_string(),
+            tls: TlsConfig::default(),
         }
     }
 }
 
 impl Config {
     /// Default URL to connect to.
-    pub const DEFAULT_URL: &str = "http://127.0.0.1:50051";
+    pub const DEFAULT_URL: &str = "https://127.0.0.1:50051";
     /// Create a new configuration from file at `path`.
     pub fn with_path<P: AsRef<Path>>(path: P) -> Result<Self, Error> {
         let text = std::fs::read_to_string(path)?;

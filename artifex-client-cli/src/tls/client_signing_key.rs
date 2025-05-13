@@ -18,7 +18,7 @@ use rsa::{
 use std::path::Path;
 use tokio_rustls::rustls::{
     self,
-    pki_types::{pem::PemObject, PrivateKeyDer, SubjectPublicKeyInfoDer},
+    pki_types::SubjectPublicKeyInfoDer,
     sign::{Signer, SigningKey},
     SignatureAlgorithm, SignatureScheme,
 };
@@ -69,6 +69,44 @@ impl Signer for ClientSigner {
     }
 }
 
+// A builder for configuring a client signing key.
+#[derive(Debug)]
+pub(super) struct ClientSigningKeyBuilder {
+    key_pem: String,
+    password: Option<String>,
+}
+
+impl ClientSigningKeyBuilder {
+    /// Create a new client signing key builder.
+    pub(super) fn with_pem_file<P: AsRef<Path>>(key_path: P) -> Result<Self> {
+        let key_pem = std::fs::read_to_string(&key_path).with_context(|| {
+            format!(
+                "Failed to read private key from {}",
+                key_path.as_ref().display()
+            )
+        })?;
+        Ok(Self {
+            key_pem,
+            password: None,
+        })
+    }
+    /// Set password for key decryption.
+    pub(super) fn password(&mut self, password: &str) -> &Self {
+        self.password = Some(password.to_string());
+        self
+    }
+    /// Build a client signing key.
+    pub(super) fn build(self) -> Result<ClientSigningKey> {
+        let inner = if let Some(password) = &self.password {
+            RsaPrivateKey::from_pkcs8_encrypted_pem(&self.key_pem, password)
+        } else {
+            RsaPrivateKey::from_pkcs8_pem(&self.key_pem)
+        };
+        let inner = inner.with_context(|| "Failed to create RSA key")?;
+        Ok(ClientSigningKey { inner })
+    }
+}
+
 /// Represent a private signing key.
 #[derive(Clone, Debug)]
 pub(super) struct ClientSigningKey {
@@ -76,23 +114,7 @@ pub(super) struct ClientSigningKey {
 }
 
 impl ClientSigningKey {
-    /// Create a signing key from a PEM file.
-    pub(super) fn with_pem_file<P: AsRef<Path>>(key_path: P) -> Result<Self> {
-        let inner = PrivateKeyDer::from_pem_file(&key_path).with_context(|| {
-            format!(
-                "Failed to create private key from {}",
-                key_path.as_ref().display()
-            )
-        })?;
-        let inner = RsaPrivateKey::from_pkcs8_der(inner.secret_der()).with_context(|| {
-            format!(
-                "Failed to create RSA key from {}",
-                key_path.as_ref().display()
-            )
-        })?;
-        Ok(Self { inner })
-    }
-
+    /// Return the list of supported signature schemes.
     fn supported_schemes(&self) -> &[SignatureScheme] {
         match self.inner.to_public_key().size() {
             256 => &[

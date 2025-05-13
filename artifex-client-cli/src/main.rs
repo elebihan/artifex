@@ -6,15 +6,13 @@
 
 use anyhow::{Context, Result};
 use artifex_batch::{Batch, BatchRunner, MarkupKind, MarkupReportRenderer};
-use artifex_client_cli::{config::Config, tls};
-use artifex_rpc::artifex_client::ArtifexClient;
+use artifex_client_cli::{client::ClientBuilder, config::Config, tls::Config as TlsConfig};
 use clap::{Parser, ValueEnum};
 use std::{
     fs::File,
     io::{Read, Write},
     path::PathBuf,
 };
-use tonic::transport::Channel;
 
 const BATCH_DEFAULT: &str = r#"
 INSPECT
@@ -119,32 +117,21 @@ async fn main() -> Result<()> {
     let input = args.batch().with_context(|| "failed to open input")?;
     let mut output = args.report().with_context(|| "failed to create report")?;
     let url = args.url.unwrap_or(config.url);
-    let tls = if let Some(("https", _)) = url.split_once("://") {
-        let tls = tls::Config {
+    let builder = if let Some(("https", _)) = url.split_once("://") {
+        let tls = TlsConfig {
             root_cert: args.root_cert.unwrap_or(config.tls.root_cert),
             client_cert: args.client_cert.unwrap_or(config.tls.client_cert),
             client_key: args.client_key.unwrap_or(config.tls.client_key),
             server_alt_name: args.server_alt_name.or(config.tls.server_alt_name),
         };
-        let tls = tls::create_client_config(&tls)
-            .with_context(|| "failed to create TLS client configuration")?;
-        Some(tls)
+        ClientBuilder::with_tls_config(tls)
     } else {
-        None
+        ClientBuilder::default()
     };
-    let channel = Channel::from_shared(url).with_context(|| "failed to create channel")?;
-    let channel = if let Some(tls) = tls {
-        channel
-            .tls_config(tls)
-            .with_context(|| "failed to set TLS client configuration")?
-    } else {
-        channel
-    };
-    let conn = channel
-        .connect()
+    let mut client = builder
+        .connect(&url)
         .await
         .with_context(|| "failed to connect to server")?;
-    let mut client = ArtifexClient::new(conn);
     let mut runner = BatchRunner::new(&mut client);
     let batch = Batch::from_reader(input).with_context(|| "failed to open batch")?;
     let report = runner

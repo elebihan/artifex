@@ -4,11 +4,9 @@
 // SPDX-License-Identifier: MIT
 //
 
-mod config;
-mod tls;
-
 use anyhow::{Context, Result};
 use artifex_batch::{Batch, BatchRunner, MarkupKind, MarkupReportRenderer};
+use artifex_client_cli::{config::Config, tls};
 use artifex_rpc::artifex_client::ArtifexClient;
 use clap::{Parser, ValueEnum};
 use std::{
@@ -17,8 +15,6 @@ use std::{
     path::PathBuf,
 };
 use tonic::transport::Channel;
-
-use config::Config;
 
 const BATCH_DEFAULT: &str = r#"
 INSPECT

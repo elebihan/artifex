@@ -32,7 +32,7 @@ impl Default for Config {
 
 impl Config {
     /// Default root certification authoritity file.
-    pub const DEFAULT_ROOT_CERT: &str = "/etc/artifex/root.pem";
+    pub const DEFAULT_ROOT_CERT: &str = "/etc/artifex/root.crt.pem";
     /// Default server certificate.
     pub const DEFAULT_SERVER_CERT: &str = "/etc/artifex/server.crt.pem";
     /// Default server private key.

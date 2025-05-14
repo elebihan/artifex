@@ -56,6 +56,10 @@ address = "127.0.0.1"
 port = 50051
 [engine]
 allowed_programs = ["date", "uname"]
+[tls]
+root_cert = "/etc/artifex/root.crt.pem"
+server_cert = "/etc/artifex/server.crt.pem"
+server_key = "/etc/artifex/server.key.pem"
 "#;
 
     #[test]

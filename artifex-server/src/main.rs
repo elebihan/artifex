@@ -12,6 +12,7 @@ use clap::Parser;
 use std::net::SocketAddr;
 use std::path::PathBuf;
 use tonic::transport::Server;
+use tonic_web::GrpcWebLayer;
 use tracing_subscriber::layer::SubscriberExt;
 use tracing_subscriber::util::SubscriberInitExt;
 
@@ -85,9 +86,7 @@ async fn main() -> Result<()> {
 
     let reflection = tonic_reflection::server::Builder::configure()
         .register_encoded_file_descriptor_set(FILE_DESCRIPTOR_SET)
-        .build()?;
-
-    let artifex = tonic_web::enable(server);
+        .build_v1()?;
 
     tracing_subscriber::registry()
         .with(tracing_subscriber::fmt::layer())
@@ -96,7 +95,7 @@ async fn main() -> Result<()> {
         .with_context(|| "Failed to init tracing")?;
 
     let builder = Server::builder();
-    let mut builder = if let Some(tls) = tls {
+    let builder = if let Some(tls) = tls {
         builder
             .tls_config(tls)
             .with_context(|| "failed to set TLS server configuration")?
@@ -104,7 +103,8 @@ async fn main() -> Result<()> {
         builder.accept_http1(true)
     };
     builder
-        .add_service(artifex)
+        .layer(GrpcWebLayer::new())
+        .add_service(server)
         .add_service(reflection)
         .serve(address)
         .await

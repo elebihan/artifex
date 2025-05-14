@@ -19,6 +19,6 @@ fn main() -> Result<(), Box<dyn Error>> {
                 .file_descriptor_set_path(out_dir.join("artifex_descriptor.bin"))
         }
     };
-    builder.compile(&["proto/artifex.proto"], &["proto"])?;
+    builder.compile_protos(&["proto/artifex.proto"], &["proto"])?;
     Ok(())
 }

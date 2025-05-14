@@ -4,10 +4,19 @@
 // SPDX-License-Identifier: MIT
 //
 
+mod client_cert_resolver;
+mod client_signing_key;
+
 use anyhow::{Context, Result};
 use serde::Deserialize;
-use std::path::PathBuf;
-use tonic::transport::{Certificate, ClientTlsConfig, Identity};
+use std::{path::PathBuf, sync::Arc};
+use tokio_rustls::rustls::{
+    self,
+    pki_types::{pem::PemObject, CertificateDer},
+    ClientConfig, RootCertStore,
+};
+
+use client_cert_resolver::ClientCertResolver;
 
 /// Hold the configuration of the TLS.
 #[derive(Debug, Deserialize, PartialEq)]
@@ -43,36 +52,25 @@ impl Config {
 }
 
 /// Create TLS client configuration.
-pub fn create_client_config(config: &Config) -> Result<ClientTlsConfig> {
-    let root_cert = std::fs::read_to_string(&config.root_cert).with_context(|| {
+pub fn create_client_config(config: &Config) -> Result<ClientConfig> {
+    let mut ca_store = RootCertStore::empty();
+    let root_cert = CertificateDer::from_pem_file(&config.root_cert).with_context(|| {
         format!(
             "Failed to read root certificate from '{}'",
             config.root_cert.display()
         )
     })?;
-    let root_cert = Certificate::from_pem(root_cert);
-    let cert = std::fs::read_to_string(&config.client_cert).with_context(|| {
-        format!(
-            "Failed to read client certificate from '{}'",
-            config.client_cert.display()
-        )
-    })?;
-    let key = std::fs::read_to_string(&config.client_key).with_context(|| {
-        format!(
-            "Failed to read client private key from '{}'",
-            config.client_key.display()
-        )
-    })?;
-    let identity = Identity::from_pem(cert, key);
-    let tls = if let Some(server_alt_name) = &config.server_alt_name {
-        ClientTlsConfig::new()
-            .ca_certificate(root_cert)
-            .identity(identity)
-            .domain_name(server_alt_name)
-    } else {
-        ClientTlsConfig::new()
-            .ca_certificate(root_cert)
-            .identity(identity)
-    };
+    ca_store
+        .add(root_cert)
+        .with_context(|| "Failed to add root certificate")?;
+    let provider = rustls::crypto::ring::default_provider();
+    let client_auth_resolver =
+        ClientCertResolver::with_pem_files(&config.client_cert, &config.client_key)?;
+    let tls = ClientConfig::builder_with_provider(provider.into())
+        .with_safe_default_protocol_versions()
+        .with_context(|| "Failed to get protocols")?;
+    let tls = tls
+        .with_root_certificates(ca_store)
+        .with_client_cert_resolver(Arc::new(client_auth_resolver));
     Ok(tls)
 }

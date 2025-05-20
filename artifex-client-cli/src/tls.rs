@@ -18,6 +18,8 @@ pub struct Config {
     pub client_cert: PathBuf,
     /// Path to client private key file.
     pub client_key: PathBuf,
+    /// Server alternative name.
+    pub server_alt_name: Option<String>,
 }
 
 impl Default for Config {
@@ -26,6 +28,7 @@ impl Default for Config {
             root_cert: PathBuf::from(Self::DEFAULT_ROOT_CERT),
             client_cert: PathBuf::from(Self::DEFAULT_CLIENT_CERT),
             client_key: PathBuf::from(Self::DEFAULT_CLIENT_KEY),
+            server_alt_name: None,
         }
     }
 }
@@ -61,15 +64,15 @@ pub fn create_client_config(config: &Config) -> Result<ClientTlsConfig> {
         )
     })?;
     let identity = Identity::from_pem(cert, key);
-    let config = ClientTlsConfig::new()
-        //
-        // The certificate of the server should contain the following in
-        // 'X509v3 extensions' section:
-        //     X509v3 Subject Alternative Name:
-        //     DNS:artifex-server
-        //
-        .domain_name("artifex-server")
-        .ca_certificate(root_cert)
-        .identity(identity);
-    Ok(config)
+    let tls = if let Some(server_alt_name) = &config.server_alt_name {
+        ClientTlsConfig::new()
+            .ca_certificate(root_cert)
+            .identity(identity)
+            .domain_name(server_alt_name)
+    } else {
+        ClientTlsConfig::new()
+            .ca_certificate(root_cert)
+            .identity(identity)
+    };
+    Ok(tls)
 }

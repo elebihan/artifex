@@ -117,7 +117,12 @@ async fn main() -> Result<()> {
     let mut output = args.report().with_context(|| "failed to create report")?;
     let url = args.url.unwrap_or(config.url);
     let tls = if let Some(("https", _)) = url.split_once("://") {
-        let tls = tls::create_client_config(&config.tls)
+        let tls = tls::Config {
+            root_cert: args.root_cert.unwrap_or(config.tls.root_cert),
+            client_cert: args.client_cert.unwrap_or(config.tls.client_cert),
+            client_key: args.client_key.unwrap_or(config.tls.client_key),
+        };
+        let tls = tls::create_client_config(&tls)
             .with_context(|| "failed to create TLS client configuration")?;
         Some(tls)
     } else {

@@ -38,7 +38,8 @@ keyUsage = critical, digitalSignature, keyEncipherment
 extendedKeyUsage = serverAuth
 subjectAltName = @alt_names
 [alt_names]
-DNS.1 = artifex-server
+# DNS.1 = artifex-server
+IP.1 = 127.0.0.1
 EOF
 openssl req -new -key server.key.pem -out server.csr.pem \
         -subj "/C=FR/ST=IDF/O=Example Organization/CN=Example Server"
@@ -50,6 +51,21 @@ openssl x509 -req -in server.csr.pem -out server.crt.pem \
 ```
 
 Note the "alt_names" section in the extension, required for RustTLS to work.
+Here an alternative IP is set allowing the client and the server running on the
+same machine.
+
+To allow the client to connect to the server using an alternative name (e.g
+"artifex-server"), set the "alt_names" section to:
+
+```
+[alt_names]
+DNS.1 = artifex-server
+```
+
+In that case, the CLI client should be run with `-n artifex-server` option or
+its configuration file should contain 'server_alt_name = "artifex-server"' '"in
+the "tls" section.
+
 
 Verify that the server certificate is signed by root CA:
 

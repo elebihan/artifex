@@ -85,6 +85,13 @@ struct Cli {
         value_name = "FILE"
     )]
     pub client_key: Option<PathBuf>,
+    #[arg(
+        short = 'n',
+        long,
+        help = "Server alternative name",
+        value_name = "NAME"
+    )]
+    pub server_alt_name: Option<String>,
     #[arg(help = "Path to batch file")]
     batch: Option<PathBuf>,
 }
@@ -121,6 +128,7 @@ async fn main() -> Result<()> {
             root_cert: args.root_cert.unwrap_or(config.tls.root_cert),
             client_cert: args.client_cert.unwrap_or(config.tls.client_cert),
             client_key: args.client_key.unwrap_or(config.tls.client_key),
+            server_alt_name: args.server_alt_name.or(config.tls.server_alt_name),
         };
         let tls = tls::create_client_config(&tls)
             .with_context(|| "failed to create TLS client configuration")?;

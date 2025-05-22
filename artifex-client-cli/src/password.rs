@@ -44,7 +44,7 @@ fn trim_newline(text: &mut String) -> &mut String {
 /// as `<SCHEME>:<VALUE>`, where `<SCHEME>` can be:
 ///
 /// - `env`: read password from environment variable, which name is passed in
-///          `<VALUE>`.
+///   `<VALUE>`.
 /// - `fd`: read password from file description specified by `<VALUE>`.
 /// - `file`: read password from file specified by `<VALUE>`.
 ///

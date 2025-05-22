@@ -12,10 +12,19 @@ artifex-batch = { path = "../artifex-batch" }
 artifex-rpc = { path = "../artifex-rpc" }
 clap = { version = "4.4.8", features = ["derive"] }
 futures = "0.3.29"
+hyper = "1.6.0"
+hyper-rustls = { version = "0.27.5", features = ["http2", "ring"] }
+hyper-util = { version = "0.1.11", features = ["client", "client-legacy", "http1", "http2", "tokio"] }
+pkcs8 = { version = "0.10.2", features = ["encryption", "pem"] }
+rand = "^0.8"
+rpassword = "7.4.0"
+rsa = { version = "0.9.8", features = ["sha2"] }
 serde = { version = "1.0.219", features = ["derive"] }
 thiserror = "2.0.12"
 tokio = { version = "1.34.0", features = ["full"] }
+tokio-rustls = { version = "0.26.2", features = ["ring"] }
 tokio-stream = { version = "0.1.14", features = ["net"] }
 toml = "0.8.22"
 tonic = { version = "0.13.0", features = ["tls-ring"] }
 tonic-reflection = "0.13.0"
+tower = "0.5.2"

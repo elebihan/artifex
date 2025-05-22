@@ -4,6 +4,7 @@
 // SPDX-License-Identifier: MIT
 //
 
+use super::password::PasswordProvider;
 use super::tls::Config as TlsConfig;
 use artifex_batch::MarkupKind;
 use serde::Deserialize;
@@ -26,6 +27,9 @@ pub struct Config {
     pub format: MarkupKind,
     /// URL of the client.
     pub url: String,
+    /// Password provider.
+    #[serde(default = "PasswordProvider::default")]
+    pub password_provider: PasswordProvider,
     /// Configuration of TLS.
     pub tls: TlsConfig,
 }
@@ -35,6 +39,7 @@ impl Default for Config {
         Self {
             format: MarkupKind::Yaml,
             url: Self::DEFAULT_URL.to_string(),
+            password_provider: PasswordProvider::Prompt,
             tls: TlsConfig::default(),
         }
     }

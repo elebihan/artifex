@@ -4,10 +4,21 @@
 // SPDX-License-Identifier: MIT
 //
 
+//! TLS client configuration.
+
+mod client_cert_resolver;
+mod client_signing_key;
+
 use anyhow::{Context, Result};
 use serde::Deserialize;
-use std::path::PathBuf;
-use tonic::transport::{Certificate, ClientTlsConfig, Identity};
+use std::{path::PathBuf, sync::Arc};
+use tokio_rustls::rustls::{
+    self,
+    pki_types::{pem::PemObject, CertificateDer},
+    ClientConfig, RootCertStore,
+};
+
+use client_cert_resolver::ClientCertResolverBuilder;
 
 /// Hold the configuration of the TLS.
 #[derive(Debug, Deserialize, PartialEq)]
@@ -18,6 +29,8 @@ pub struct Config {
     pub client_cert: PathBuf,
     /// Path to client private key file.
     pub client_key: PathBuf,
+    /// Password for client private key file.
+    pub client_password: Option<String>,
     /// Server alternative name.
     pub server_alt_name: Option<String>,
 }
@@ -28,6 +41,7 @@ impl Default for Config {
             root_cert: PathBuf::from(Self::DEFAULT_ROOT_CERT),
             client_cert: PathBuf::from(Self::DEFAULT_CLIENT_CERT),
             client_key: PathBuf::from(Self::DEFAULT_CLIENT_KEY),
+            client_password: None,
             server_alt_name: None,
         }
     }
@@ -43,36 +57,31 @@ impl Config {
 }
 
 /// Create TLS client configuration.
-pub fn create_client_config(config: &Config) -> Result<ClientTlsConfig> {
-    let root_cert = std::fs::read_to_string(&config.root_cert).with_context(|| {
+pub fn create_client_config(config: &Config) -> Result<ClientConfig> {
+    let mut ca_store = RootCertStore::empty();
+    let root_cert = CertificateDer::from_pem_file(&config.root_cert).with_context(|| {
         format!(
             "Failed to read root certificate from '{}'",
             config.root_cert.display()
         )
     })?;
-    let root_cert = Certificate::from_pem(root_cert);
-    let cert = std::fs::read_to_string(&config.client_cert).with_context(|| {
-        format!(
-            "Failed to read client certificate from '{}'",
-            config.client_cert.display()
-        )
-    })?;
-    let key = std::fs::read_to_string(&config.client_key).with_context(|| {
-        format!(
-            "Failed to read client private key from '{}'",
-            config.client_key.display()
-        )
-    })?;
-    let identity = Identity::from_pem(cert, key);
-    let tls = if let Some(server_alt_name) = &config.server_alt_name {
-        ClientTlsConfig::new()
-            .ca_certificate(root_cert)
-            .identity(identity)
-            .domain_name(server_alt_name)
-    } else {
-        ClientTlsConfig::new()
-            .ca_certificate(root_cert)
-            .identity(identity)
-    };
+    ca_store
+        .add(root_cert)
+        .with_context(|| "Failed to add root certificate")?;
+    let provider = rustls::crypto::ring::default_provider();
+    let mut client_cert_resolver_builder =
+        ClientCertResolverBuilder::with_pem_files(&config.client_cert, &config.client_key)?;
+    if let Some(password) = &config.client_password {
+        client_cert_resolver_builder.password(password);
+    }
+    let client_cert_resolver = client_cert_resolver_builder
+        .build()
+        .with_context(|| "Failed to create client certificate resolver")?;
+    let tls = ClientConfig::builder_with_provider(provider.into())
+        .with_safe_default_protocol_versions()
+        .with_context(|| "Failed to get protocols")?;
+    let tls = tls
+        .with_root_certificates(ca_store)
+        .with_client_cert_resolver(Arc::new(client_cert_resolver));
     Ok(tls)
 }

@@ -4,7 +4,6 @@
 // SPDX-License-Identifier: MIT
 //
 
-use anyhow::{Context, Result};
 use rsa::{
     pkcs1::EncodeRsaPublicKey,
     pkcs1v15,
@@ -16,12 +15,22 @@ use rsa::{
     RsaPrivateKey,
 };
 use std::path::Path;
+use thiserror::Error;
 use tokio_rustls::rustls::{
     self,
     pki_types::SubjectPublicKeyInfoDer,
     sign::{Signer, SigningKey},
     SignatureAlgorithm, SignatureScheme,
 };
+
+/// Errors occuring when handling a file-based signing key.
+#[derive(Debug, Error)]
+pub enum Error {
+    #[error("I/O error: {0}")]
+    Io(#[from] std::io::Error),
+    #[error("PKCS8 error: {0}")]
+    Pkcs8(#[from] pkcs8::Error),
+}
 
 /// Perform signature with private key.
 #[derive(Clone, Debug)]
@@ -78,13 +87,8 @@ pub(super) struct FileSigningKeyBuilder {
 
 impl FileSigningKeyBuilder {
     /// Create a new file signing key builder.
-    pub(super) fn with_pem_file<P: AsRef<Path>>(key_path: P) -> Result<Self> {
-        let key_pem = std::fs::read_to_string(&key_path).with_context(|| {
-            format!(
-                "Failed to read private key from {}",
-                key_path.as_ref().display()
-            )
-        })?;
+    pub(super) fn with_pem_file<P: AsRef<Path>>(key_path: P) -> Result<Self, Error> {
+        let key_pem = std::fs::read_to_string(&key_path)?;
         Ok(Self {
             key_pem,
             password: None,
@@ -96,13 +100,13 @@ impl FileSigningKeyBuilder {
         self
     }
     /// Build a file signing key.
-    pub(super) fn build(self) -> Result<FileSigningKey> {
+    pub(super) fn build(self) -> Result<FileSigningKey, Error> {
         let inner = if let Some(password) = &self.password {
             RsaPrivateKey::from_pkcs8_encrypted_pem(&self.key_pem, password)
         } else {
             RsaPrivateKey::from_pkcs8_pem(&self.key_pem)
         };
-        let inner = inner.with_context(|| "Failed to create RSA key")?;
+        let inner = inner?;
         Ok(FileSigningKey { inner })
     }
 }

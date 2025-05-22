@@ -6,16 +6,28 @@
 
 //! Client management.
 
-use anyhow::{Context, Result};
 use artifex_rpc::artifex_client::ArtifexClient;
 use hyper_rustls::FixedServerNameResolver;
 use hyper_rustls::HttpsConnectorBuilder;
 use hyper_util::client::legacy::connect::HttpConnector;
+use thiserror::Error;
+use tokio_rustls::rustls;
 use tokio_rustls::rustls::pki_types::ServerName;
 use tonic::transport::{Channel, Endpoint};
 use tower::ServiceBuilder;
 
 use crate::tls::{create_client_config, Config as TlsConfig};
+
+/// Errors reported when managing a client.
+#[derive(Debug, Error)]
+pub enum Error {
+    #[error("RusTLS error: {0}")]
+    Rustls(#[from] rustls::pki_types::InvalidDnsNameError),
+    #[error("TLS error: {0}")]
+    Tls(#[from] crate::tls::Error),
+    #[error("Tonic transport error: {0}")]
+    Tonic(#[from] tonic::transport::Error),
+}
 
 /// Build a client, with options.
 #[derive(Debug, Default)]
@@ -29,11 +41,10 @@ impl ClientBuilder {
         Self { tls: Some(tls) }
     }
     /// Create a client for server at `url`.
-    pub async fn connect(self, url: &str) -> Result<ArtifexClient<Channel>> {
-        let endpoint = Endpoint::from_shared(url.to_string()).with_context(|| "Invalid URI")?;
+    pub async fn connect(self, url: &str) -> Result<ArtifexClient<Channel>, Error> {
+        let endpoint = Endpoint::from_shared(url.to_string())?;
         let tls = if let Some(tls) = &self.tls {
-            let tls = create_client_config(tls)
-                .with_context(|| "failed to create TLS client configuration")?;
+            let tls = create_client_config(tls)?;
             Some(tls)
         } else {
             None
@@ -66,14 +77,9 @@ impl ClientBuilder {
                 })
                 .map_request(move |_| url.clone())
                 .service(http);
-            Channel::connect(connector, endpoint)
-                .await
-                .with_context(|| "failed to connect to server")?
+            Channel::connect(connector, endpoint).await?
         } else {
-            endpoint
-                .connect()
-                .await
-                .with_context(|| "failed to connect to server")?
+            endpoint.connect().await?
         };
         let client = ArtifexClient::new(conn);
         Ok(client)

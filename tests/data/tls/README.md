@@ -75,10 +75,17 @@ openssl verify -CAfile root.crt.pem server.crt.pem
 
 ## Client
 
+Create password file for client private key:
+
+```sh
+echo "53cr3tP4ssw0rd" > client.key.password.txt
+```
+
 Create a private key, then a certificate, signed by the root CA:
 
 ```sh
-openssl genrsa -out client.key.pem 4096
+openssl genrsa -aes256 -passout file:client.key.password.txt \
+        -out client.key.pem 4096
 cat<<'EOF'>client.cnf
 basicConstraints = CA:FALSE
 nsCertType = client
@@ -88,6 +95,7 @@ keyUsage = critical, digitalSignature, keyEncipherment
 extendedKeyUsage = clientAuth
 EOF
 openssl req -new -key client.key.pem -out client.csr.pem \
+        -passin file:client.key.password.txt \
         -subj "/C=FR/ST=IDF/O=Example Organization/CN=Example Client"
 openssl x509 -req -in client.csr.pem -out client.crt.pem \
         -CA root.crt.pem \

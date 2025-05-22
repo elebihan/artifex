@@ -14,13 +14,13 @@ use tokio_rustls::rustls::{
     SignatureScheme,
 };
 
-use crate::tls::client_signing_key::ClientSigningKeyBuilder;
+use crate::tls::file_signing_key::FileSigningKeyBuilder;
 
 // A builder for configuring a client client certificate resolver.
 #[derive(Debug)]
 pub(super) struct ClientCertResolverBuilder {
     cert_pem: String,
-    key_builder: ClientSigningKeyBuilder,
+    key_builder: FileSigningKeyBuilder,
 }
 
 impl ClientCertResolverBuilder {
@@ -32,7 +32,7 @@ impl ClientCertResolverBuilder {
                 cert_path.as_ref().display()
             )
         })?;
-        let key_builder = ClientSigningKeyBuilder::with_pem_file(&key_path).with_context(|| {
+        let key_builder = FileSigningKeyBuilder::with_pem_file(&key_path).with_context(|| {
             format!("Failed to read key from '{}'", key_path.as_ref().display())
         })?;
         Ok(Self {

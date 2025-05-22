@@ -7,7 +7,7 @@
 //! TLS client configuration.
 
 mod client_cert_resolver;
-mod client_signing_key;
+mod file_signing_key;
 
 use anyhow::{Context, Result};
 use serde::Deserialize;

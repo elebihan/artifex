@@ -4,7 +4,6 @@
 // SPDX-License-Identifier: MIT
 //
 
-use anyhow::{Context, Result};
 use rsa::{
     pkcs1::EncodeRsaPublicKey,
     pkcs1v15,
@@ -16,6 +15,7 @@ use rsa::{
     RsaPrivateKey,
 };
 use std::path::Path;
+use thiserror::Error;
 use tokio_rustls::rustls::{
     self,
     pki_types::SubjectPublicKeyInfoDer,
@@ -23,14 +23,23 @@ use tokio_rustls::rustls::{
     SignatureAlgorithm, SignatureScheme,
 };
 
+/// Errors occuring when handling a file-based signing key.
+#[derive(Debug, Error)]
+pub enum Error {
+    #[error("I/O error: {0}")]
+    Io(#[from] std::io::Error),
+    #[error("PKCS8 error: {0}")]
+    Pkcs8(#[from] pkcs8::Error),
+}
+
 /// Perform signature with private key.
 #[derive(Clone, Debug)]
-struct ClientSigner {
+struct InternalSigner {
     key: RsaPrivateKey,
     scheme: SignatureScheme,
 }
 
-impl Signer for ClientSigner {
+impl Signer for InternalSigner {
     fn scheme(&self) -> SignatureScheme {
         self.scheme
     }
@@ -69,22 +78,17 @@ impl Signer for ClientSigner {
     }
 }
 
-// A builder for configuring a client signing key.
+// A builder for configuring a file signing key.
 #[derive(Debug)]
-pub(super) struct ClientSigningKeyBuilder {
+pub(super) struct FileSigningKeyBuilder {
     key_pem: String,
     password: Option<String>,
 }
 
-impl ClientSigningKeyBuilder {
-    /// Create a new client signing key builder.
-    pub(super) fn with_pem_file<P: AsRef<Path>>(key_path: P) -> Result<Self> {
-        let key_pem = std::fs::read_to_string(&key_path).with_context(|| {
-            format!(
-                "Failed to read private key from {}",
-                key_path.as_ref().display()
-            )
-        })?;
+impl FileSigningKeyBuilder {
+    /// Create a new file signing key builder.
+    pub(super) fn with_pem_file<P: AsRef<Path>>(key_path: P) -> Result<Self, Error> {
+        let key_pem = std::fs::read_to_string(&key_path)?;
         Ok(Self {
             key_pem,
             password: None,
@@ -95,25 +99,25 @@ impl ClientSigningKeyBuilder {
         self.password = Some(password.to_string());
         self
     }
-    /// Build a client signing key.
-    pub(super) fn build(self) -> Result<ClientSigningKey> {
+    /// Build a file signing key.
+    pub(super) fn build(self) -> Result<FileSigningKey, Error> {
         let inner = if let Some(password) = &self.password {
             RsaPrivateKey::from_pkcs8_encrypted_pem(&self.key_pem, password)
         } else {
             RsaPrivateKey::from_pkcs8_pem(&self.key_pem)
         };
-        let inner = inner.with_context(|| "Failed to create RSA key")?;
-        Ok(ClientSigningKey { inner })
+        let inner = inner?;
+        Ok(FileSigningKey { inner })
     }
 }
 
 /// Represent a private signing key.
 #[derive(Clone, Debug)]
-pub(super) struct ClientSigningKey {
+pub(super) struct FileSigningKey {
     inner: RsaPrivateKey,
 }
 
-impl ClientSigningKey {
+impl FileSigningKey {
     /// Return the list of supported signature schemes.
     fn supported_schemes(&self) -> &[SignatureScheme] {
         match self.inner.to_public_key().size() {
@@ -134,7 +138,7 @@ impl ClientSigningKey {
     }
 }
 
-impl SigningKey for ClientSigningKey {
+impl SigningKey for FileSigningKey {
     fn algorithm(&self) -> SignatureAlgorithm {
         SignatureAlgorithm::RSA
     }
@@ -143,7 +147,7 @@ impl SigningKey for ClientSigningKey {
         let supported = self.supported_schemes();
         for scheme in offered {
             if supported.contains(scheme) {
-                return Some(Box::new(ClientSigner {
+                return Some(Box::new(InternalSigner {
                     key: self.inner.clone(),
                     scheme: *scheme,
                 }));

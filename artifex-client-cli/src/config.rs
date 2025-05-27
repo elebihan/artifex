@@ -8,7 +8,7 @@ use super::password::PasswordProvider;
 use super::tls::Config as TlsConfig;
 use artifex_batch::MarkupKind;
 use serde::Deserialize;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use thiserror::Error;
 
 /// Errors reported when managing the configuration.
@@ -40,7 +40,13 @@ impl Default for Config {
             format: MarkupKind::Yaml,
             url: Self::DEFAULT_URL.to_string(),
             password_provider: PasswordProvider::Prompt,
-            tls: TlsConfig::default(),
+            tls: TlsConfig {
+                root_cert: PathBuf::from(Self::DEFAULT_TLS_ROOT_CERT),
+                client_cert: PathBuf::from(Self::DEFAULT_TLS_CLIENT_CERT),
+                client_key: PathBuf::from(Self::DEFAULT_TLS_CLIENT_KEY),
+                client_password: None,
+                server_alt_name: None,
+            },
         }
     }
 }
@@ -48,6 +54,12 @@ impl Default for Config {
 impl Config {
     /// Default URL to connect to.
     pub const DEFAULT_URL: &str = "https://127.0.0.1:50051";
+    /// Default TLS root certification authority file.
+    pub const DEFAULT_TLS_ROOT_CERT: &str = "/etc/artifex/root.crt.pem";
+    /// Default TLS client certificate.
+    pub const DEFAULT_TLS_CLIENT_CERT: &str = "/etc/artifex/client.crt.pem";
+    /// Default TLS client private key.
+    pub const DEFAULT_TLS_CLIENT_KEY: &str = "/etc/artifex/client.key.pem";
     /// Create a new configuration from file at `path`.
     pub fn with_path<P: AsRef<Path>>(path: P) -> Result<Self, Error> {
         let text = std::fs::read_to_string(path)?;

@@ -4,43 +4,45 @@
 // SPDX-License-Identifier: MIT
 //
 
-use std::path::Path;
 use std::sync::Arc;
 use thiserror::Error;
-use tokio_rustls::rustls::{
-    client::ResolvesClientCert,
-    pki_types::{self, pem::PemObject, CertificateDer},
-    sign::CertifiedKey,
-    SignatureScheme,
-};
+use tokio_rustls::rustls::{client::ResolvesClientCert, sign::CertifiedKey, SignatureScheme};
 
 use crate::tls::file_signing_key::FileSigningKeyBuilder;
+
+use super::cert;
+use super::uri::{self, Uri};
 
 /// Errors occuring when operating with a client certificate resolver.
 #[derive(Debug, Error)]
 pub enum Error {
+    #[error("Certificate error: {0}")]
+    Certificate(#[from] cert::Error),
     #[error("I/O error: {0}")]
     Io(#[from] std::io::Error),
-    #[error("PEM error: {0}")]
-    Pem(#[from] pki_types::pem::Error),
     #[error("Signing key error: {0}")]
     SigningKey(#[from] crate::tls::file_signing_key::Error),
+    #[error("URI error: {0}")]
+    Uri(#[from] crate::tls::uri::Error),
 }
 
 // A builder for configuring a client client certificate resolver.
 #[derive(Debug)]
 pub(super) struct ClientCertResolverBuilder {
-    cert_pem: String,
+    cert_uri: String,
     key_builder: FileSigningKeyBuilder,
 }
 
 impl ClientCertResolverBuilder {
     /// Create a builder.
-    pub(super) fn with_pem_files<P: AsRef<Path>>(cert_path: P, key_path: P) -> Result<Self, Error> {
-        let cert_pem = std::fs::read_to_string(&cert_path)?;
-        let key_builder = FileSigningKeyBuilder::with_pem_file(&key_path)?;
+    pub(super) fn new(cert_uri: &str, key_uri: &str) -> Result<Self, Error> {
+        let key_uri = Uri::parse(key_uri).map_err(uri::Error::InvalidUri)?;
+        let key_builder = match key_uri.scheme() {
+            "file" | "data" => FileSigningKeyBuilder::with_pem_file(&key_uri.path())?,
+            s => return Err(Error::Uri(uri::Error::UnsupportedScheme(s.to_string()))),
+        };
         Ok(Self {
-            cert_pem,
+            cert_uri: cert_uri.to_string(),
             key_builder,
         })
     }
@@ -51,7 +53,7 @@ impl ClientCertResolverBuilder {
     }
     /// Build a client certificate resolver.
     pub(super) fn build(self) -> Result<ClientCertResolver, Error> {
-        let cert = CertificateDer::from_pem_reader(self.cert_pem.as_bytes())?;
+        let cert = cert::load_certificate(&self.cert_uri)?;
         let key = self.key_builder.build()?;
         let key = CertifiedKey::new(vec![cert], Arc::new(key));
         Ok(ClientCertResolver { key: Arc::new(key) })

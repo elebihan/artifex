@@ -70,24 +70,14 @@ struct Cli {
     #[arg(
         short = 'r',
         long,
-        help = "Root certificate authority file",
-        value_name = "FILE"
+        help = "Root certificate authority URI",
+        value_name = "URI"
     )]
-    pub root_cert: Option<PathBuf>,
-    #[arg(
-        short = 'c',
-        long,
-        help = "Client certificate file",
-        value_name = "FILE"
-    )]
-    pub client_cert: Option<PathBuf>,
-    #[arg(
-        short = 'k',
-        long,
-        help = "Client private key file",
-        value_name = "FILE"
-    )]
-    pub client_key: Option<PathBuf>,
+    pub root_cert: Option<String>,
+    #[arg(short = 'c', long, help = "Client certificate URI", value_name = "URI")]
+    pub client_cert: Option<String>,
+    #[arg(short = 'k', long, help = "Client private key URI", value_name = "URI")]
+    pub client_key: Option<String>,
     #[arg(
         short = 'n',
         long,

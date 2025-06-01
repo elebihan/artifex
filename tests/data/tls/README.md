@@ -3,7 +3,8 @@
 Here are the commands to generate the keys and certificates required for running
 an Artifex server and a client with a TLS connection.
 
-## Root Certification Authority
+## File-based credentials
+### Root Certification Authority
 
 Create a private key, then a self-signed certificate:
 
@@ -23,7 +24,7 @@ openssl x509 -req -in root.csr.pem -out root.crt.pem \
         -extfile root.cnf
 ```
 
-## Server
+### Server
 
 Create a private key, then a certificate, signed by the root CA:
 
@@ -73,7 +74,7 @@ Verify that the server certificate is signed by root CA:
 openssl verify -CAfile root.crt.pem server.crt.pem
 ```
 
-## Client
+### Client
 
 Create password file for client private key:
 

@@ -1,0 +1,6 @@
+format = "Yaml"
+url = "https://127.0.0.1:50051"
+[tls]
+root_cert = "pkcs11:token=Artifex%20Client%20Token%2001;object=Artifex%20Root%20CA%20Certificate%2001?module-path=/usr/lib64/libsofthsm2.so"
+client_cert = "pkcs11:token=Artifex%20Client%20Token%2001;object=Artifex%20Client%20Certificate%2001?module-path=/usr/lib64/libsofthsm2.so"
+client_key = "pkcs11:token=Artifex%20Client%20Token%2001;object=Artifex%20Client%20Key%2001?module-path=/usr/lib64/libsofthsm2.so&pin-source=env:CLIENT_KEY_PASSWORD"

@@ -10,6 +10,7 @@ use tokio_rustls::rustls::{client::ResolvesClientCert, sign::CertifiedKey, Signa
 
 use super::cert;
 use super::file::signing_key::FileSigningKey;
+use super::pkcs11::signing_key::Pkcs11SigningKey;
 use super::uri::Uri;
 
 /// Errors occuring when operating with a client certificate resolver.
@@ -17,10 +18,12 @@ use super::uri::Uri;
 pub enum Error {
     #[error("Certificate error: {0}")]
     Certificate(#[from] cert::Error),
+    #[error("File signing key error: {0}")]
+    FileSigningKey(#[from] crate::tls::file::signing_key::Error),
     #[error("I/O error: {0}")]
     Io(#[from] std::io::Error),
-    #[error("Signing key error: {0}")]
-    SigningKey(#[from] crate::tls::file::signing_key::Error),
+    #[error("PKCS#11 signing key error: {0}")]
+    Pkcs11SigningKey(#[from] crate::tls::pkcs11::signing_key::Error),
     #[error("URI error: {0}")]
     Uri(#[from] crate::tls::uri::Error),
 }
@@ -35,9 +38,16 @@ impl ClientCertResolver {
     /// Create a new client certificate resolver.
     pub(super) fn new(cert_uri: &Uri, key_uri: &Uri) -> Result<Self, Error> {
         let cert = cert::load_certificate(&cert_uri)?;
-        let Uri::File(key_uri) = key_uri;
-        let key = FileSigningKey::new(&key_uri)?;
-        let key = CertifiedKey::new(vec![cert], Arc::new(key));
+        let key = match key_uri {
+            Uri::File(uri) => {
+                let key = FileSigningKey::new(uri)?;
+                CertifiedKey::new(vec![cert], Arc::new(key))
+            }
+            Uri::Pkcs11(uri) => {
+                let key = Pkcs11SigningKey::new(uri)?;
+                CertifiedKey::new(vec![cert], Arc::new(key))
+            }
+        };
         Ok(ClientCertResolver { key: Arc::new(key) })
     }
 }

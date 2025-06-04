@@ -26,42 +26,25 @@ pub enum Error {
     Uri(#[from] crate::tls::uri::Error),
 }
 
-// A builder for configuring a client client certificate resolver.
-#[derive(Debug)]
-pub(super) struct ClientCertResolverBuilder {
-    cert_uri: Uri,
-    key_builder: FileSigningKeyBuilder,
-}
-
-impl ClientCertResolverBuilder {
-    /// Create a builder.
-    pub(super) fn new(cert_uri: &str, key_uri: &str) -> Result<Self, Error> {
-        let cert_uri = cert_uri.parse::<Uri>()?;
-        let Uri::File(key_uri) = key_uri.parse::<Uri>()?;
-        let key_builder = FileSigningKeyBuilder::with_pem_file(&key_uri.path())?;
-        Ok(Self {
-            cert_uri,
-            key_builder,
-        })
-    }
-    /// Set password for key decryption.
-    pub(super) fn password(&mut self, password: &str) -> &Self {
-        self.key_builder.password(password);
-        self
-    }
-    /// Build a client certificate resolver.
-    pub(super) fn build(self) -> Result<ClientCertResolver, Error> {
-        let cert = cert::load_certificate(&self.cert_uri)?;
-        let key = self.key_builder.build()?;
-        let key = CertifiedKey::new(vec![cert], Arc::new(key));
-        Ok(ClientCertResolver { key: Arc::new(key) })
-    }
-}
-
 /// Choose the certificate chain and private key for client authentication.
 #[derive(Debug)]
 pub(super) struct ClientCertResolver {
     key: Arc<CertifiedKey>,
+}
+
+impl ClientCertResolver {
+    /// Create a new client certificate resolver.
+    pub(super) fn new(cert_uri: &Uri, key_uri: &Uri) -> Result<Self, Error> {
+        let cert = cert::load_certificate(&cert_uri)?;
+        let Uri::File(key_uri) = key_uri;
+        let mut key_builder = FileSigningKeyBuilder::with_pem_file(&key_uri.path())?;
+        if let Some(password) = key_uri.password() {
+            key_builder.password(password);
+        }
+        let key = key_builder.build()?;
+        let key = CertifiedKey::new(vec![cert], Arc::new(key));
+        Ok(ClientCertResolver { key: Arc::new(key) })
+    }
 }
 
 impl ResolvesClientCert for ClientCertResolver {

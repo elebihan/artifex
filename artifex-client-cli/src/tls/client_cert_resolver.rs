@@ -11,7 +11,7 @@ use tokio_rustls::rustls::{client::ResolvesClientCert, sign::CertifiedKey, Signa
 use crate::tls::file_signing_key::FileSigningKeyBuilder;
 
 use super::cert;
-use super::uri::{self, Uri};
+use super::uri::Uri;
 
 /// Errors occuring when operating with a client certificate resolver.
 #[derive(Debug, Error)]
@@ -29,20 +29,18 @@ pub enum Error {
 // A builder for configuring a client client certificate resolver.
 #[derive(Debug)]
 pub(super) struct ClientCertResolverBuilder {
-    cert_uri: String,
+    cert_uri: Uri,
     key_builder: FileSigningKeyBuilder,
 }
 
 impl ClientCertResolverBuilder {
     /// Create a builder.
     pub(super) fn new(cert_uri: &str, key_uri: &str) -> Result<Self, Error> {
-        let key_uri = Uri::parse(key_uri).map_err(uri::Error::InvalidUri)?;
-        let key_builder = match key_uri.scheme() {
-            "file" | "data" => FileSigningKeyBuilder::with_pem_file(&key_uri.path())?,
-            s => return Err(Error::Uri(uri::Error::UnsupportedScheme(s.to_string()))),
-        };
+        let cert_uri = cert_uri.parse::<Uri>()?;
+        let Uri::File(key_uri) = key_uri.parse::<Uri>()?;
+        let key_builder = FileSigningKeyBuilder::with_pem_file(&key_uri.path())?;
         Ok(Self {
-            cert_uri: cert_uri.to_string(),
+            cert_uri,
             key_builder,
         })
     }

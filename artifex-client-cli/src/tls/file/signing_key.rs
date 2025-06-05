@@ -4,6 +4,7 @@
 // SPDX-License-Identifier: MIT
 //
 
+use super::FileUri;
 use rsa::{
     pkcs1::EncodeRsaPublicKey,
     pkcs1v15,
@@ -14,7 +15,6 @@ use rsa::{
     traits::PublicKeyParts,
     RsaPrivateKey,
 };
-use std::path::Path;
 use thiserror::Error;
 use tokio_rustls::rustls::{
     self,
@@ -78,39 +78,6 @@ impl Signer for InternalSigner {
     }
 }
 
-// A builder for configuring a file signing key.
-#[derive(Debug)]
-pub(crate) struct FileSigningKeyBuilder {
-    key_pem: String,
-    password: Option<String>,
-}
-
-impl FileSigningKeyBuilder {
-    /// Create a new file signing key builder.
-    pub(crate) fn with_pem_file<P: AsRef<Path>>(key_path: P) -> Result<Self, Error> {
-        let key_pem = std::fs::read_to_string(&key_path)?;
-        Ok(Self {
-            key_pem,
-            password: None,
-        })
-    }
-    /// Set password for key decryption.
-    pub(crate) fn password(&mut self, password: &str) -> &Self {
-        self.password = Some(password.to_string());
-        self
-    }
-    /// Build a file signing key.
-    pub(crate) fn build(self) -> Result<FileSigningKey, Error> {
-        let inner = if let Some(password) = &self.password {
-            RsaPrivateKey::from_pkcs8_encrypted_pem(&self.key_pem, password)
-        } else {
-            RsaPrivateKey::from_pkcs8_pem(&self.key_pem)
-        };
-        let inner = inner?;
-        Ok(FileSigningKey { inner })
-    }
-}
-
 /// Represent a private signing key.
 #[derive(Clone, Debug)]
 pub(crate) struct FileSigningKey {
@@ -118,6 +85,17 @@ pub(crate) struct FileSigningKey {
 }
 
 impl FileSigningKey {
+    /// Create a new file-based signing key.
+    pub(crate) fn new(uri: &FileUri) -> Result<Self, Error> {
+        let pem_data = std::fs::read_to_string(&uri.path())?;
+        let inner = if let Some(password) = uri.password() {
+            RsaPrivateKey::from_pkcs8_encrypted_pem(&pem_data, password)
+        } else {
+            RsaPrivateKey::from_pkcs8_pem(&pem_data)
+        };
+        let inner = inner?;
+        Ok(FileSigningKey { inner })
+    }
     /// Return the list of supported signature schemes.
     fn supported_schemes(&self) -> &[SignatureScheme] {
         match self.inner.to_public_key().size() {

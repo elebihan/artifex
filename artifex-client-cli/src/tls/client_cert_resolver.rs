@@ -9,7 +9,7 @@ use thiserror::Error;
 use tokio_rustls::rustls::{client::ResolvesClientCert, sign::CertifiedKey, SignatureScheme};
 
 use super::cert;
-use super::file::signing_key::FileSigningKeyBuilder;
+use super::file::signing_key::FileSigningKey;
 use super::uri::Uri;
 
 /// Errors occuring when operating with a client certificate resolver.
@@ -36,11 +36,7 @@ impl ClientCertResolver {
     pub(super) fn new(cert_uri: &Uri, key_uri: &Uri) -> Result<Self, Error> {
         let cert = cert::load_certificate(&cert_uri)?;
         let Uri::File(key_uri) = key_uri;
-        let mut key_builder = FileSigningKeyBuilder::with_pem_file(&key_uri.path())?;
-        if let Some(password) = key_uri.password() {
-            key_builder.password(password);
-        }
-        let key = key_builder.build()?;
+        let key = FileSigningKey::new(&key_uri)?;
         let key = CertifiedKey::new(vec![cert], Arc::new(key));
         Ok(ClientCertResolver { key: Arc::new(key) })
     }

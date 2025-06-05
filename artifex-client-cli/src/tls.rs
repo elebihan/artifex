@@ -46,8 +46,6 @@ pub struct Config {
     pub client_cert: String,
     /// URI for client private key.
     pub client_key: String,
-    /// Password for client private key.
-    pub client_password: Option<String>,
     /// Server alternative name.
     pub server_alt_name: Option<String>,
 }

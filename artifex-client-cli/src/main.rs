@@ -6,9 +6,7 @@
 
 use anyhow::{Context, Result};
 use artifex_batch::{Batch, BatchRunner, MarkupKind, MarkupReportRenderer};
-use artifex_client_cli::{
-    client::ClientBuilder, config::Config, password::PasswordProvider, tls::Config as TlsConfig,
-};
+use artifex_client_cli::{client::ClientBuilder, config::Config, tls::Config as TlsConfig};
 use clap::{Parser, ValueEnum};
 use std::{
     fs::File,
@@ -58,13 +56,6 @@ struct Cli {
         default_value = Config::DEFAULT_URL
     )]
     url: Option<String>,
-    #[arg(
-        short = 'S',
-        long = "password",
-        help = "Password provider",
-        value_name = "PROVIDER"
-    )]
-    password_provider: Option<PasswordProvider>,
     #[arg(short = 'R', long, help = "Path to report file", value_name = "FILE")]
     report: Option<PathBuf>,
     #[arg(
@@ -116,17 +107,11 @@ async fn main() -> Result<()> {
     let input = args.batch().with_context(|| "failed to open input")?;
     let mut output = args.report().with_context(|| "failed to create report")?;
     let url = args.url.unwrap_or(config.url);
-    let password_provider = args.password_provider.unwrap_or(config.password_provider);
     let builder = if let Some(("https", _)) = url.split_once("://") {
-        let password = password_provider
-            .provide()
-            .map(|s| if s.trim().is_empty() { None } else { Some(s) })
-            .with_context(|| "Failed to get password")?;
         let tls = TlsConfig {
             root_cert: args.root_cert.unwrap_or(config.tls.root_cert),
             client_cert: args.client_cert.unwrap_or(config.tls.client_cert),
             client_key: args.client_key.unwrap_or(config.tls.client_key),
-            client_password: password,
             server_alt_name: args.server_alt_name.or(config.tls.server_alt_name),
         };
         ClientBuilder::with_tls_config(tls)

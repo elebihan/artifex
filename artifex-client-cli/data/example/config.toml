@@ -3,4 +3,4 @@ url = "https://127.0.0.1:50051"
 [tls]
 root_cert = "data:tests/data/tls/root.crt.pem"
 client_cert = "data:tests/data/tls/client.crt.pem"
-client_key = "data:tests/data/tls/client.key.pem"
+client_key = "data:tests/data/tls/client.key.pem?password-source=env:CLIENT_KEY_PASSWORD"

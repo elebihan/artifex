@@ -4,6 +4,7 @@
 // SPDX-License-Identifier: MIT
 //
 
+pub(crate) mod signing_key;
 mod uri;
 
 pub use uri::FileUri;

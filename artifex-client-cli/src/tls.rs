@@ -9,7 +9,6 @@
 mod cert;
 mod client_cert_resolver;
 mod file;
-mod file_signing_key;
 mod uri;
 
 use serde::Deserialize;

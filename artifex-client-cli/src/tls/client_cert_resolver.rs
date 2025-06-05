@@ -8,9 +8,8 @@ use std::sync::Arc;
 use thiserror::Error;
 use tokio_rustls::rustls::{client::ResolvesClientCert, sign::CertifiedKey, SignatureScheme};
 
-use crate::tls::file_signing_key::FileSigningKeyBuilder;
-
 use super::cert;
+use super::file::signing_key::FileSigningKeyBuilder;
 use super::uri::Uri;
 
 /// Errors occuring when operating with a client certificate resolver.
@@ -21,7 +20,7 @@ pub enum Error {
     #[error("I/O error: {0}")]
     Io(#[from] std::io::Error),
     #[error("Signing key error: {0}")]
-    SigningKey(#[from] crate::tls::file_signing_key::Error),
+    SigningKey(#[from] crate::tls::file::signing_key::Error),
     #[error("URI error: {0}")]
     Uri(#[from] crate::tls::uri::Error),
 }

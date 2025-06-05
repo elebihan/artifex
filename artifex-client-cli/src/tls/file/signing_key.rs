@@ -80,14 +80,14 @@ impl Signer for InternalSigner {
 
 // A builder for configuring a file signing key.
 #[derive(Debug)]
-pub(super) struct FileSigningKeyBuilder {
+pub(crate) struct FileSigningKeyBuilder {
     key_pem: String,
     password: Option<String>,
 }
 
 impl FileSigningKeyBuilder {
     /// Create a new file signing key builder.
-    pub(super) fn with_pem_file<P: AsRef<Path>>(key_path: P) -> Result<Self, Error> {
+    pub(crate) fn with_pem_file<P: AsRef<Path>>(key_path: P) -> Result<Self, Error> {
         let key_pem = std::fs::read_to_string(&key_path)?;
         Ok(Self {
             key_pem,
@@ -95,12 +95,12 @@ impl FileSigningKeyBuilder {
         })
     }
     /// Set password for key decryption.
-    pub(super) fn password(&mut self, password: &str) -> &Self {
+    pub(crate) fn password(&mut self, password: &str) -> &Self {
         self.password = Some(password.to_string());
         self
     }
     /// Build a file signing key.
-    pub(super) fn build(self) -> Result<FileSigningKey, Error> {
+    pub(crate) fn build(self) -> Result<FileSigningKey, Error> {
         let inner = if let Some(password) = &self.password {
             RsaPrivateKey::from_pkcs8_encrypted_pem(&self.key_pem, password)
         } else {
@@ -113,7 +113,7 @@ impl FileSigningKeyBuilder {
 
 /// Represent a private signing key.
 #[derive(Clone, Debug)]
-pub(super) struct FileSigningKey {
+pub(crate) struct FileSigningKey {
     inner: RsaPrivateKey,
 }
 

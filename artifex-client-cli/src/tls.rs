@@ -8,7 +8,7 @@
 
 mod cert;
 mod client_cert_resolver;
-mod file_signing_key;
+mod file;
 mod uri;
 
 use serde::Deserialize;
@@ -16,7 +16,8 @@ use std::sync::Arc;
 use thiserror::Error;
 use tokio_rustls::rustls::{self, pki_types, ClientConfig, RootCertStore};
 
-use client_cert_resolver::ClientCertResolverBuilder;
+use client_cert_resolver::ClientCertResolver;
+use uri::Uri;
 
 /// Errors occuring when configuring TLS connection.
 #[derive(Debug, Error)]
@@ -31,6 +32,8 @@ pub enum Error {
     Pem(#[from] pki_types::pem::Error),
     #[error("RusTLS error: {0}")]
     RusTls(#[from] rustls::Error),
+    #[error("URI error: {0}")]
+    Uri(#[from] uri::Error),
 }
 
 /// Hold the configuration of the TLS.
@@ -42,8 +45,6 @@ pub struct Config {
     pub client_cert: String,
     /// URI for client private key.
     pub client_key: String,
-    /// Password for client private key.
-    pub client_password: Option<String>,
     /// Server alternative name.
     pub server_alt_name: Option<String>,
 }
@@ -51,15 +52,14 @@ pub struct Config {
 /// Create TLS client configuration.
 pub fn create_client_config(config: &Config) -> Result<ClientConfig, Error> {
     let mut ca_store = RootCertStore::empty();
-    let root_cert = cert::load_certificate(&config.root_cert)?;
+    let root_cert_uri = config.root_cert.parse::<Uri>()?;
+    let root_cert = cert::load_certificate(&root_cert_uri)?;
     ca_store.add(root_cert)?;
+    let client_cert_uri = config.client_cert.parse::<Uri>()?;
+    let client_key_uri = config.client_key.parse::<Uri>()?;
+    let client_key_uri = client_key_uri.source_secret()?;
+    let client_cert_resolver = ClientCertResolver::new(&client_cert_uri, &client_key_uri)?;
     let provider = rustls::crypto::ring::default_provider();
-    let mut client_cert_resolver_builder =
-        ClientCertResolverBuilder::new(&config.client_cert, &config.client_key)?;
-    if let Some(password) = &config.client_password {
-        client_cert_resolver_builder.password(password);
-    }
-    let client_cert_resolver = client_cert_resolver_builder.build()?;
     let tls = ClientConfig::builder_with_provider(provider.into())
         .with_safe_default_protocol_versions()?;
     let tls = tls

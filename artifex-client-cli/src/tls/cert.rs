@@ -19,11 +19,8 @@ pub enum Error {
     Pem(#[from] tokio_rustls::rustls::pki_types::pem::Error),
 }
 
-pub(crate) fn load_certificate<'a>(uri: &str) -> Result<CertificateDer<'a>, Error> {
-    let uri = Uri::parse(uri).map_err(uri::Error::InvalidUri)?;
-    let cert = match uri.scheme() {
-        "file" | "data" => CertificateDer::from_pem_file(&uri.path())?,
-        s => return Err(Error::Uri(uri::Error::UnsupportedScheme(s.to_string()))),
-    };
+pub(crate) fn load_certificate<'a>(uri: &Uri) -> Result<CertificateDer<'a>, Error> {
+    let Uri::File(uri) = uri;
+    let cert = CertificateDer::from_pem_file(&uri.path())?;
     Ok(cert)
 }

@@ -44,7 +44,6 @@ impl Default for Config {
                 root_cert: Self::DEFAULT_TLS_ROOT_CERT.to_string(),
                 client_cert: Self::DEFAULT_TLS_CLIENT_CERT.to_string(),
                 client_key: Self::DEFAULT_TLS_CLIENT_KEY.to_string(),
-                client_password: None,
                 server_alt_name: None,
             },
         }

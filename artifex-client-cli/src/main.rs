@@ -6,7 +6,8 @@
 
 use anyhow::{Context, Result};
 use artifex_batch::{Batch, BatchRunner, MarkupKind, MarkupReportRenderer};
-use artifex_client_cli::{client::ClientBuilder, config::Config, tls::Config as TlsConfig};
+use artifex_client_cli::config::Config;
+use artifex_client_kit::{client::ClientBuilder, tls::Config as TlsConfig};
 use clap::{Parser, ValueEnum};
 use std::{
     fs::File,

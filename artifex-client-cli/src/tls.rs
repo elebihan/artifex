@@ -9,6 +9,7 @@
 mod cert;
 mod client_cert_resolver;
 mod file;
+mod pkcs11;
 mod uri;
 
 use serde::Deserialize;

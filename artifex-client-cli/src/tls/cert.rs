@@ -26,7 +26,7 @@ pub enum Error {
 
 pub(crate) fn load_certificate<'a>(uri: &Uri) -> Result<CertificateDer<'a>, Error> {
     let cert = match uri {
-        Uri::File(uri) => CertificateDer::from_pem_file(&uri.path())?,
+        Uri::File(uri) => CertificateDer::from_pem_file(uri.path())?,
         Uri::Pkcs11(uri) => pkcs11::read_certificate(uri)
             .map_err(pkcs11::Error::Certificate)
             .map(CertificateDer::from)?,

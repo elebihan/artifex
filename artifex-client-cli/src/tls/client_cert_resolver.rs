@@ -37,7 +37,7 @@ pub(super) struct ClientCertResolver {
 impl ClientCertResolver {
     /// Create a new client certificate resolver.
     pub(super) fn new(cert_uri: &Uri, key_uri: &Uri) -> Result<Self, Error> {
-        let cert = cert::load_certificate(&cert_uri)?;
+        let cert = cert::load_certificate(cert_uri)?;
         let key = match key_uri {
             Uri::File(uri) => {
                 let key = FileSigningKey::new(uri)?;

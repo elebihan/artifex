@@ -87,7 +87,7 @@ pub(crate) struct FileSigningKey {
 impl FileSigningKey {
     /// Create a new file-based signing key.
     pub(crate) fn new(uri: &FileUri) -> Result<Self, Error> {
-        let pem_data = std::fs::read_to_string(&uri.path())?;
+        let pem_data = std::fs::read_to_string(uri.path())?;
         let inner = if let Some(password) = uri.password() {
             RsaPrivateKey::from_pkcs8_encrypted_pem(&pem_data, password)
         } else {

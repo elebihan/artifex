@@ -154,6 +154,33 @@ dependencies = [
 ]
 
 [[package]]
+name = "artifex-client-kit"
+version = "0.1.1"
+dependencies = [
+ "anyhow",
+ "artifex-rpc",
+ "cryptoki",
+ "futures",
+ "hyper",
+ "hyper-rustls",
+ "hyper-util",
+ "pkcs8",
+ "rand 0.8.5",
+ "rpassword",
+ "rsa",
+ "serde",
+ "thiserror 2.0.12",
+ "tokio",
+ "tokio-rustls",
+ "tokio-stream",
+ "toml",
+ "tonic",
+ "tonic-reflection",
+ "tower",
+ "url",
+]
+
+[[package]]
 name = "artifex-engine"
 version = "0.1.1"
 dependencies = [

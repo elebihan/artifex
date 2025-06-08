@@ -4,4 +4,6 @@
 // SPDX-License-Identifier: MIT
 //
 
-pub mod config;
+pub mod client;
+pub mod password;
+pub mod tls;

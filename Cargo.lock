@@ -130,8 +130,21 @@ version = "0.1.1"
 dependencies = [
  "anyhow",
  "artifex-batch",
+ "artifex-client-kit",
  "artifex-rpc",
  "clap",
+ "serde",
+ "thiserror 2.0.12",
+ "tokio",
+ "toml",
+]
+
+[[package]]
+name = "artifex-client-kit"
+version = "0.1.1"
+dependencies = [
+ "anyhow",
+ "artifex-rpc",
  "cryptoki",
  "futures",
  "hyper",

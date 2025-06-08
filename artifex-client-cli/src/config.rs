@@ -4,9 +4,9 @@
 // SPDX-License-Identifier: MIT
 //
 
-use super::password::PasswordProvider;
-use super::tls::Config as TlsConfig;
 use artifex_batch::MarkupKind;
+use artifex_client_kit::password::PasswordProvider;
+use artifex_client_kit::tls::Config as TlsConfig;
 use serde::Deserialize;
 use std::path::Path;
 use thiserror::Error;

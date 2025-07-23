@@ -18,7 +18,7 @@ use thiserror::Error;
 use tokio_rustls::rustls::{self, pki_types, ClientConfig, RootCertStore};
 
 use client_cert_resolver::ClientCertResolver;
-use uri::Uri;
+pub use uri::Uri;
 
 /// Errors occuring when configuring TLS connection.
 #[derive(Debug, Error)]

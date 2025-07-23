@@ -51,7 +51,7 @@ mod tests {
     fn basic() {
         let progression = RandomProgression::new();
         for position in progression {
-            println!("Progression: {}%", position);
+            println!("Progression: {position}%");
         }
     }
 }

@@ -104,17 +104,17 @@ impl MarkupReportRenderer {
                 CommandStatus::Failure => ("failure", None),
                 CommandStatus::Success(output) => ("success", output.as_ref()),
             };
-            writeln!(writer, "  status : {}", status)?;
+            writeln!(writer, "  status : {status}")?;
             if let Some(output) = output {
                 writeln!(writer, "  output : |")?;
                 match output {
                     CommandOutput::String(text) => {
                         for line in text.lines() {
-                            writeln!(writer, "    {}", line)?;
+                            writeln!(writer, "    {line}")?;
                         }
                     }
                     CommandOutput::Uint32(number) => {
-                        writeln!(writer, "    {}", number)?;
+                        writeln!(writer, "    {number}")?;
                     }
                 }
             }
@@ -141,14 +141,14 @@ impl MarkupReportRenderer {
                 CommandStatus::Failure => ("failure", None),
                 CommandStatus::Success(output) => ("success", output.as_ref()),
             };
-            writeln!(writer, "      <status>{}</status>", status)?;
+            writeln!(writer, "      <status>{status}</status>")?;
             if let Some(output) = output {
                 match output {
                     CommandOutput::String(text) => {
-                        writeln!(writer, "      <output><![CDATA[{}]]></output>", text)?;
+                        writeln!(writer, "      <output><![CDATA[{text}]]></output>")?;
                     }
                     CommandOutput::Uint32(number) => {
-                        writeln!(writer, "      <output>{}</output>", number)?;
+                        writeln!(writer, "      <output>{number}</output>")?;
                     }
                 };
             }

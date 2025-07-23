@@ -76,7 +76,7 @@ mod tests {
     fn do_progressive_stuff() {
         let engine = Engine::default();
         let res = engine.upgrade(|position| {
-            println!("Progression: {}%", position);
+            println!("Progression: {position}%");
         });
         assert!(res.is_ok());
     }

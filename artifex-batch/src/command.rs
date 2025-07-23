@@ -51,7 +51,7 @@ impl FromStr for Command {
 impl Display for Command {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Command::Execute(command) => write!(f, "EXECUTE: {}", command),
+            Command::Execute(command) => write!(f, "EXECUTE: {command}"),
             Command::Inspect => write!(f, "INSPECT"),
             Command::Upgrade => write!(f, "UPGRADE"),
         }
@@ -68,8 +68,8 @@ pub enum CommandOutput {
 impl Display for CommandOutput {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            CommandOutput::String(s) => write!(f, "{}", s),
-            CommandOutput::Uint32(u) => write!(f, "{}", u),
+            CommandOutput::String(s) => write!(f, "{s}"),
+            CommandOutput::Uint32(u) => write!(f, "{u}"),
         }
     }
 }

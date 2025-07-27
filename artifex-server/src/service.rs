@@ -25,6 +25,7 @@ pub struct ArtifexService {
 
 impl ArtifexService {
     /// Create a new service using an engine configuration.
+    #[must_use]
     pub fn with_engine_config(config: Config) -> Self {
         Self {
             engine: Arc::new(Mutex::new(Engine::with_config(config))),
@@ -85,7 +86,7 @@ impl Artifex for ArtifexService {
             let res = engine.upgrade(move |position| {
                 let reply = UpgradeReply {
                     status: upgrade_reply::Status::Running as i32,
-                    position: position as i32,
+                    position: i32::from(position),
                 };
                 if tx_clone
                     .blocking_send(Result::<_, Status>::Ok(reply))

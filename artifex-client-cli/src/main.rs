@@ -15,12 +15,12 @@ use std::{
     path::PathBuf,
 };
 
-const BATCH_DEFAULT: &str = r#"
+const BATCH_DEFAULT: &str = r"
 INSPECT
 EXECUTE: date -u
 UPGRADE
 EXECUTE: uptime
-"#;
+";
 
 /// Format of the report
 #[derive(Clone, Debug, ValueEnum)]

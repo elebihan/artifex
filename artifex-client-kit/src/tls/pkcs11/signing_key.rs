@@ -149,6 +149,7 @@ impl Pkcs11SigningKey {
         Ok(session)
     }
     /// Return the list of supported signature schemes.
+    #[allow(clippy::unused_self)]
     fn supported_schemes(&self) -> &[SignatureScheme] {
         &[
             SignatureScheme::RSA_PKCS1_SHA256,

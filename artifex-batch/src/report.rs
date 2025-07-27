@@ -41,16 +41,19 @@ impl BatchReport {
     }
 
     /// Return the creation date of a `Report`.
+    #[must_use]
     pub fn date(&self) -> &DateTime<Utc> {
         &self.date
     }
 
     /// Return the entries in a `Report`.
+    #[must_use]
     pub fn entries(&self) -> &[ReportEntry] {
         &self.entries
     }
 
     /// Return the title of a `Report`.
+    #[must_use]
     pub fn title(&self) -> &str {
         &self.title
     }
@@ -78,6 +81,7 @@ pub enum MarkupKind {
 
 impl MarkupReportRenderer {
     /// Create a new report renderer.
+    #[must_use]
     pub fn new(markup_kind: MarkupKind) -> Self {
         Self { markup_kind }
     }
@@ -150,7 +154,7 @@ impl MarkupReportRenderer {
                     CommandOutput::Uint32(number) => {
                         writeln!(writer, "      <output>{number}</output>")?;
                     }
-                };
+                }
             }
             writeln!(writer, "    </command>")?;
         }
@@ -193,7 +197,7 @@ mod tests {
         assert_eq!(reference, text);
     }
 
-    const REPORT_YAML: &str = r#"# Artifex batch report
+    const REPORT_YAML: &str = r"# Artifex batch report
 title   : Dummy Report
 date    : 2023-05-07T09:17:58.133639582+00:00
 commands:
@@ -203,7 +207,7 @@ commands:
     Sun May  7 09:17:58 UTC 2023
 - command: 'UPGRADE'
   status : failure
-"#;
+";
     #[test]
     fn render_to_yaml() {
         render_to_markup(MarkupKind::Yaml, REPORT_YAML);

@@ -35,10 +35,10 @@ impl FromStr for Command {
         let items = s.trim().split(':').collect::<Vec<&str>>();
         match items[0] {
             "EXECUTE" => {
-                if items.len() != 2 {
-                    Err(Error::MissingArgument)
-                } else {
+                if items.len() == 2 {
                     Ok(Command::Execute(items[1].trim().to_string()))
+                } else {
+                    Err(Error::MissingArgument)
                 }
             }
             "INSPECT" => Ok(Command::Inspect),
@@ -89,6 +89,6 @@ mod tests {
     fn parse_valid_execute() {
         let res = "EXECUTE: date -u".parse::<Command>();
         assert!(res.is_ok());
-        assert_eq!(res.unwrap(), Command::Execute("date -u".to_string()))
+        assert_eq!(res.unwrap(), Command::Execute("date -u".to_string()));
     }
 }

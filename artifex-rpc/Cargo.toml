@@ -18,3 +18,14 @@ tonic = "0.13"
 
 [build-dependencies]
 tonic-build = "0.13"
+
+[lints.clippy]
+pedantic = { level = "deny", priority = -1 }
+default_trait_access = "allow"
+missing_errors_doc = "allow"
+result_large_err = "allow"
+similar_names = "allow"
+too_many_lines = "allow"
+
+[lints.rustc]
+non_camel_case_types = "allow"

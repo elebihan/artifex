@@ -34,3 +34,6 @@ tonic = { version = "0.13.0", features = ["tls-ring"] }
 tonic-reflection = "0.13.0"
 tower = "0.5.2"
 url = "2.5.4"
+
+[lints]
+workspace = true

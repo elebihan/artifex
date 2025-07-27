@@ -15,13 +15,18 @@ pub struct RandomProgression {
 }
 
 impl RandomProgression {
+    /// Create a new random progression between 1 and 99.
+    ///
+    /// # Panics
+    /// Panics if internally, a uniform range from 1 to 99 can not be created.
+    #[must_use]
     pub fn new() -> Self {
         let mut rng = rand::rng();
         let count = rng.random_range(1..10);
         let positions_range = Uniform::new_inclusive(1, 99).expect("Uniform range should be valid");
         let mut positions: Vec<u8> = positions_range.sample_iter(&mut rng).take(count).collect();
         positions.push(100);
-        positions.sort();
+        positions.sort_unstable();
 
         Self {
             positions: VecDeque::from(positions),

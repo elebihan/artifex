@@ -37,6 +37,7 @@ pub struct ClientBuilder {
 
 impl ClientBuilder {
     /// Create a client builder, with a TLS configuration.
+    #[must_use]
     pub fn with_tls_config(tls: TlsConfig) -> Self {
         Self { tls: Some(tls) }
     }

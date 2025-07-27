@@ -15,6 +15,8 @@ pub struct Config {
 impl Config {
     /// Return an iterator over the allowed programs.
     pub fn allowed_programs(&self) -> impl Iterator<Item = &str> {
-        self.allowed_programs.iter().map(|s| s.as_str())
+        self.allowed_programs
+            .iter()
+            .map(std::string::String::as_str)
     }
 }

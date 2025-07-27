@@ -56,6 +56,7 @@ fn trim_newline(text: &mut String) -> &mut String {
 /// - `fd:3` tells to read password from file descriptor 3.
 /// - `file:/dev/null` tells to read password from `/dev/null`.
 ///
+#[allow(clippy::unsafe_derive_deserialize)]
 #[derive(Clone, Debug, Default, Deserialize, PartialEq)]
 pub enum PasswordProvider {
     /// Read password from an environment variable.
@@ -101,7 +102,7 @@ impl PasswordProvider {
             PasswordProvider::Env(var) => std::env::var(var)?,
             #[cfg(unix)]
             PasswordProvider::Fd(fd) => {
-                let mut file = unsafe { std::fs::File::from_raw_fd(*fd as i32) };
+                let mut file = unsafe { std::fs::File::from_raw_fd(i32::from(*fd)) };
                 let mut password = String::new();
                 file.read_to_string(&mut password)?;
                 password

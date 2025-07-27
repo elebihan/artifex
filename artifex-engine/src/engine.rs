@@ -25,6 +25,7 @@ pub struct Engine {
 
 impl Engine {
     /// Create a new `Engine` with the configuration `config`.
+    #[must_use]
     pub fn with_config(config: Config) -> Self {
         Self { config }
     }
@@ -59,7 +60,7 @@ impl Engine {
         let progression = RandomProgression::new();
         let mut rng = rand::rng();
         let delay: u16 = rng.random_range(500..2000);
-        let duration = std::time::Duration::from_millis(delay as u64);
+        let duration = std::time::Duration::from_millis(u64::from(delay));
         for position in progression {
             std::thread::sleep(duration);
             notify(position);

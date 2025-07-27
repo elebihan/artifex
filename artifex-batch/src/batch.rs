@@ -72,12 +72,12 @@ mod tests {
         );
     }
 
-    const BATCH_VALID: &str = r##"
+    const BATCH_VALID: &str = r"
 INSPECT
 # Comment
 EXECUTE: date -u
 UPGRADE
-"##;
+";
 
     #[test]
     fn parse_valid_text() {

@@ -46,7 +46,7 @@ struct Pkcs11Signer {
 
 impl Pkcs11Signer {
     /// Return the mechanism matching the scheme.
-    fn mechanism(&self) -> Result<Mechanism, rustls::Error> {
+    fn mechanism(&self) -> Result<Mechanism<'_>, rustls::Error> {
         match self.scheme {
             SignatureScheme::RSA_PKCS1_SHA256 => Ok(Mechanism::Sha256RsaPkcs),
             SignatureScheme::RSA_PKCS1_SHA384 => Ok(Mechanism::Sha384RsaPkcs),

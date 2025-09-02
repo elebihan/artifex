@@ -7,7 +7,7 @@
 use serde::Deserialize;
 
 /// Hold the configuration of the engine.
-#[derive(Debug, Default, Deserialize, PartialEq)]
+#[derive(Clone, Debug, Default, Deserialize, PartialEq)]
 pub struct Config {
     pub allowed_programs: Vec<String>,
 }

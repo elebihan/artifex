@@ -5,7 +5,7 @@
 //
 
 use anyhow::{Context, Result};
-use artifex_rpc::{artifex_server::ArtifexServer, FILE_DESCRIPTOR_SET};
+use artifex_rpc::{FILE_DESCRIPTOR_SET, artifex_server::ArtifexServer};
 use artifex_server::tls;
 use artifex_server::{config::Config, service::ArtifexService};
 use clap::Parser;

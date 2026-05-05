@@ -6,7 +6,7 @@
 
 use std::sync::Arc;
 use thiserror::Error;
-use tokio_rustls::rustls::{client::ResolvesClientCert, sign::CertifiedKey, SignatureScheme};
+use tokio_rustls::rustls::{SignatureScheme, client::ResolvesClientCert, sign::CertifiedKey};
 
 use super::cert;
 use super::file::signing_key::FileSigningKey;

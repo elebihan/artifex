@@ -6,6 +6,7 @@
 
 use super::FileUri;
 use rsa::{
+    RsaPrivateKey,
     pkcs1::EncodeRsaPublicKey,
     pkcs1v15,
     pkcs8::DecodePrivateKey,
@@ -13,14 +14,12 @@ use rsa::{
     sha2::{Sha256, Sha384, Sha512},
     signature::{RandomizedSigner, SignatureEncoding},
     traits::PublicKeyParts,
-    RsaPrivateKey,
 };
 use thiserror::Error;
 use tokio_rustls::rustls::{
-    self,
+    self, SignatureAlgorithm, SignatureScheme,
     pki_types::SubjectPublicKeyInfoDer,
     sign::{Signer, SigningKey},
-    SignatureAlgorithm, SignatureScheme,
 };
 
 /// Errors occuring when handling a file-based signing key.

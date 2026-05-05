@@ -8,8 +8,8 @@ use super::Pkcs11Uri;
 use cryptoki::{
     context::{CInitializeArgs, CInitializeFlags, Pkcs11},
     mechanism::{
-        rsa::{PkcsMgfType, PkcsPssParams},
         Mechanism, MechanismType,
+        rsa::{PkcsMgfType, PkcsPssParams},
     },
     object::{Attribute, AttributeType, KeyType, ObjectHandle},
     session::{Session, UserType},
@@ -18,10 +18,9 @@ use cryptoki::{
 use std::sync::{Arc, Mutex};
 use thiserror::Error;
 use tokio_rustls::rustls::{
-    self,
+    self, SignatureAlgorithm, SignatureScheme,
     pki_types::SubjectPublicKeyInfoDer,
     sign::{Signer, SigningKey},
-    SignatureAlgorithm, SignatureScheme,
 };
 
 /// Errors occuring when handling a PKCS#11-based signing key.

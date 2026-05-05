@@ -16,7 +16,7 @@ use tokio_rustls::rustls::pki_types::ServerName;
 use tonic::transport::{Channel, Endpoint};
 use tower::ServiceBuilder;
 
-use crate::tls::{create_client_config, Config as TlsConfig};
+use crate::tls::{Config as TlsConfig, create_client_config};
 
 /// Errors reported when managing a client.
 #[derive(Debug, Error)]

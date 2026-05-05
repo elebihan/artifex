@@ -6,7 +6,7 @@
 
 use crate::config::Config;
 use crate::error::{Error, Result};
-use crate::machine::{get_machine_info, MachineInfo};
+use crate::machine::{MachineInfo, get_machine_info};
 use rand::{self, Rng};
 use random_progression::RandomProgression;
 use std::ffi::OsStr;

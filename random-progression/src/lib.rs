@@ -5,8 +5,8 @@
 //
 
 use rand::{
-    distr::{Distribution, Uniform},
     Rng,
+    distr::{Distribution, Uniform},
 };
 use std::collections::VecDeque;
 

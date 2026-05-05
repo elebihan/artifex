@@ -11,7 +11,7 @@ use crate::{
     report::{BatchReport, ReportEntry},
 };
 
-use artifex_rpc::{artifex_client::ArtifexClient, ExecuteRequest, InspectRequest, UpgradeRequest};
+use artifex_rpc::{ExecuteRequest, InspectRequest, UpgradeRequest, artifex_client::ArtifexClient};
 use futures_util::StreamExt;
 use humantime::format_duration;
 use std::{fmt::Write, time::Duration};

@@ -6,8 +6,8 @@
 
 use artifex_engine::{Config, Engine};
 use artifex_rpc::{
-    artifex_server::Artifex, upgrade_reply, ExecuteReply, ExecuteRequest, InspectReply,
-    InspectRequest, UpgradeReply, UpgradeRequest,
+    ExecuteReply, ExecuteRequest, InspectReply, InspectRequest, UpgradeReply, UpgradeRequest,
+    artifex_server::Artifex, upgrade_reply,
 };
 
 use futures::Stream;

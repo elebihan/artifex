@@ -120,8 +120,7 @@ impl FromStr for Pkcs11Uri {
 mod tests {
     use super::*;
 
-    const VALID_URI: &str =
-        "pkcs11:token=Artifex%20Client%20Token%2002;object=Artifex%20Client%20Key%2002?module-path=/usr/lib64/libsofthsm2.so&pin-source=env:CLIENT_KEY_PASSWORD";
+    const VALID_URI: &str = "pkcs11:token=Artifex%20Client%20Token%2002;object=Artifex%20Client%20Key%2002?module-path=/usr/lib64/libsofthsm2.so&pin-source=env:CLIENT_KEY_PASSWORD";
 
     #[test]
     fn try_from_valid() {

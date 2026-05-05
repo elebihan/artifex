@@ -11,7 +11,7 @@ use super::{
     uri::{self, Uri},
 };
 use thiserror::Error;
-use tokio_rustls::rustls::pki_types::{pem::PemObject, CertificateDer};
+use tokio_rustls::rustls::pki_types::{CertificateDer, pem::PemObject};
 
 /// Errors reported when hendling a X509 certificate.
 #[derive(Debug, Error)]

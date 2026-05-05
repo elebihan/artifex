@@ -15,7 +15,7 @@ mod uri;
 use serde::Deserialize;
 use std::sync::Arc;
 use thiserror::Error;
-use tokio_rustls::rustls::{self, pki_types, ClientConfig, RootCertStore};
+use tokio_rustls::rustls::{self, ClientConfig, RootCertStore, pki_types};
 
 use client_cert_resolver::ClientCertResolver;
 pub use uri::Uri;

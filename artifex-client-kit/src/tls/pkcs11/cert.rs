@@ -8,7 +8,7 @@
 
 use crate::tls::pkcs11::Pkcs11Uri;
 use cryptoki::{
-    context::{CInitializeArgs, Pkcs11},
+    context::{CInitializeArgs, CInitializeFlags, Pkcs11},
     object::{Attribute, AttributeType, CertificateType},
 };
 use thiserror::Error;
@@ -27,7 +27,7 @@ pub enum Error {
 /// Return the certificate matching a given URI.
 pub fn read_certificate(uri: &Pkcs11Uri) -> Result<Vec<u8>, Error> {
     let pkcs11 = Pkcs11::new(uri.module_path())?;
-    pkcs11.initialize(CInitializeArgs::OsThreads)?;
+    pkcs11.initialize(CInitializeArgs::new(CInitializeFlags::OS_LOCKING_OK))?;
     let slots = pkcs11.get_slots_with_initialized_token()?;
     if slots.is_empty() {
         return Err(Error::NotFound("No PKCS#11 token found".to_string()));

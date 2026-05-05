@@ -6,7 +6,7 @@
 
 use super::Pkcs11Uri;
 use cryptoki::{
-    context::{CInitializeArgs, Pkcs11},
+    context::{CInitializeArgs, CInitializeFlags, Pkcs11},
     mechanism::{
         rsa::{PkcsMgfType, PkcsPssParams},
         Mechanism, MechanismType,
@@ -116,7 +116,7 @@ impl Pkcs11SigningKey {
     /// Create a new PKCS#11-based signing key.
     pub(crate) fn new(uri: &Pkcs11Uri) -> Result<Self, Error> {
         let pkcs11 = Pkcs11::new(uri.module_path())?;
-        pkcs11.initialize(CInitializeArgs::OsThreads)?;
+        pkcs11.initialize(CInitializeArgs::new(CInitializeFlags::OS_LOCKING_OK))?;
         let session = Self::open_session(&pkcs11, uri)?;
         let key_template = vec![
             Attribute::Label(uri.object().as_bytes().to_vec()),

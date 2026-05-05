@@ -142,7 +142,7 @@ impl Pkcs11SigningKey {
         if slots.is_empty() {
             return Err(Error::NotFound("No PKCS#11 token found".to_string()));
         }
-        let pin = uri.pin().ok_or_else(|| Error::MissingPin)?;
+        let pin = uri.pin().ok_or(Error::MissingPin)?;
         let pin = AuthPin::new(pin.into());
         let session = pkcs11.open_ro_session(slots[0])?;
         session.login(UserType::User, Some(&pin))?;

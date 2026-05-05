@@ -37,7 +37,7 @@ where
                 let response = self
                     .client
                     .execute(ExecuteRequest {
-                        command: command.to_string(),
+                        command: command.clone(),
                     })
                     .await?;
                 let reply = response.into_inner();

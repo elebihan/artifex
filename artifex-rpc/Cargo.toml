@@ -27,5 +27,5 @@ result_large_err = "allow"
 similar_names = "allow"
 too_many_lines = "allow"
 
-[lints.rustc]
+[lints.rust]
 non_camel_case_types = "allow"

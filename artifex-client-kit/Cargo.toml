@@ -9,7 +9,7 @@ description = "Artifex client helpers"
 [dependencies]
 anyhow = "1.0.75"
 artifex-rpc = { path = "../artifex-rpc" }
-cryptoki = "0.9.0"
+cryptoki = "0.12.0"
 futures = "0.3.29"
 hyper = "1.6.0"
 hyper-rustls = { version = "0.27.5", features = ["http2", "ring"] }

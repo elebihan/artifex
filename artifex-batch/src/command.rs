@@ -29,21 +29,19 @@ pub enum Command {
 impl FromStr for Command {
     type Err = Error;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let s = s.trim();
         if s.is_empty() {
             return Err(Error::EmptyString);
         }
-        let items = s.trim().split(':').collect::<Vec<&str>>();
-        match items[0] {
-            "EXECUTE" => {
-                if items.len() == 2 {
-                    Ok(Command::Execute(items[1].trim().to_string()))
-                } else {
-                    Err(Error::MissingArgument)
-                }
-            }
-            "INSPECT" => Ok(Command::Inspect),
-            "UPGRADE" => Ok(Command::Upgrade),
-            _ => Err(Error::UnknownCommand(s.to_string())),
+        match s.split_once(':') {
+            Some(("EXECUTE", arg)) => Ok(Command::Execute(arg.trim().to_string())),
+            Some((cmd, _)) => Err(Error::UnknownCommand(cmd.to_string())),
+            None => match s {
+                "EXECUTE" => Err(Error::MissingArgument),
+                "INSPECT" => Ok(Command::Inspect),
+                "UPGRADE" => Ok(Command::Upgrade),
+                _ => Err(Error::UnknownCommand(s.to_string())),
+            },
         }
     }
 }

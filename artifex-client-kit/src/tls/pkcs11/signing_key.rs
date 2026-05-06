@@ -88,7 +88,11 @@ impl Signer for Pkcs11Signer {
 
     fn sign(&self, message: &[u8]) -> Result<Vec<u8>, rustls::Error> {
         let mechanism = self.mechanism()?;
-        let session = self.context.session.lock().unwrap();
+        let session = self
+            .context
+            .session
+            .lock()
+            .expect("Session lock not poisoned");
         let data = session
             .sign(&mechanism, self.context.key, message)
             .map_err(|e| rustls::Error::General(format!("Failed to sign: {e}")))?;
@@ -124,26 +128,26 @@ impl Pkcs11SigningKey {
             Attribute::KeyType(KeyType::RSA),
         ];
         let keys = session.find_objects(&key_template)?;
-        if keys.is_empty() {
+        let Some(key) = keys.first() else {
             return Err(Error::NotFound("No such PKCS#11 key".to_string()));
-        }
+        };
         Ok(Self {
             pkcs11,
             context: Pkcs11SigningContext {
                 session: Arc::new(Mutex::new(session)),
-                key: keys[0],
+                key: *key,
             },
         })
     }
     /// Open session.
     fn open_session(pkcs11: &Pkcs11, uri: &Pkcs11Uri) -> Result<Session, Error> {
         let slots = pkcs11.get_slots_with_initialized_token()?;
-        if slots.is_empty() {
+        let Some(slot) = slots.first() else {
             return Err(Error::NotFound("No PKCS#11 token found".to_string()));
-        }
+        };
         let pin = uri.pin().ok_or(Error::MissingPin)?;
         let pin = AuthPin::new(pin.into());
-        let session = pkcs11.open_ro_session(slots[0])?;
+        let session = pkcs11.open_ro_session(*slot)?;
         session.login(UserType::User, Some(&pin))?;
         Ok(session)
     }
@@ -180,7 +184,11 @@ impl SigningKey for Pkcs11SigningKey {
     }
 
     fn public_key(&self) -> Option<SubjectPublicKeyInfoDer<'_>> {
-        let session = self.context.session.lock().unwrap();
+        let session = self
+            .context
+            .session
+            .lock()
+            .expect("Session lock not poisoned");
         session
             .get_attributes(self.context.key, &[AttributeType::PublicKeyInfo])
             .ok()

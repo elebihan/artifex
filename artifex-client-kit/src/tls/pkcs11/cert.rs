@@ -29,26 +29,26 @@ pub fn read_certificate(uri: &Pkcs11Uri) -> Result<Vec<u8>, Error> {
     let pkcs11 = Pkcs11::new(uri.module_path())?;
     pkcs11.initialize(CInitializeArgs::new(CInitializeFlags::OS_LOCKING_OK))?;
     let slots = pkcs11.get_slots_with_initialized_token()?;
-    if slots.is_empty() {
+    let Some(slot) = slots.first() else {
         return Err(Error::NotFound("No PKCS#11 token found".to_string()));
-    }
-    let session = pkcs11.open_ro_session(slots[0])?;
+    };
+    let session = pkcs11.open_ro_session(*slot)?;
     let cert_template = [
         Attribute::Label(uri.object().as_bytes().to_vec()),
         Attribute::CertificateType(CertificateType::X_509),
         Attribute::Token(true),
     ];
     let certs = session.find_objects(&cert_template)?;
-    if certs.is_empty() {
+    let Some(cert) = certs.first() else {
         return Err(Error::NotFound("No such PKCS#11 certificate".to_string()));
-    }
-    let attrs = session.get_attributes(certs[0], &[AttributeType::Value])?;
-    if attrs.is_empty() {
+    };
+    let attrs = session.get_attributes(*cert, &[AttributeType::Value])?;
+    let Some(attr) = attrs.first() else {
         return Err(Error::InvalidData(
             "PKCS#11 object has no value".to_string(),
         ));
-    }
-    if let Attribute::Value(value) = &attrs[0] {
+    };
+    if let Attribute::Value(value) = attr {
         Ok(value.to_owned())
     } else {
         Err(Error::InvalidData(

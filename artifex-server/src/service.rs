@@ -41,8 +41,10 @@ impl Artifex for ArtifexService {
         &self,
         _request: Request<InspectRequest>,
     ) -> Result<Response<InspectReply>, Status> {
-        let engine = self.engine.lock().unwrap();
-        let info = engine.inspect().unwrap();
+        let engine = self.engine.lock().expect("Engine lock not poisoned");
+        let info = engine
+            .inspect()
+            .map_err(|e| tonic::Status::internal(format!("Failed to inspect: {e}")))?;
         let response = InspectReply {
             kernel_version: info.kernel_version,
             system_uptime: info.system_uptime.as_secs(),
@@ -56,7 +58,7 @@ impl Artifex for ArtifexService {
     ) -> Result<Response<ExecuteReply>, Status> {
         let execute_req = request.into_inner();
         let mut args = execute_req.command.split_whitespace();
-        let engine = self.engine.lock().unwrap();
+        let engine = self.engine.lock().expect("Engine lock not poisoned");
         if let Some(program) = args.next() {
             engine
                 .execute(program, args)
@@ -82,7 +84,7 @@ impl Artifex for ArtifexService {
         let engine = self.engine.clone();
         let tx_clone = tx.clone();
         task::spawn_blocking(move || {
-            let engine = engine.lock().unwrap();
+            let engine = engine.lock().expect("Engine lock not poisoned");
             let res = engine.upgrade(move |position| {
                 let reply = UpgradeReply {
                     status: upgrade_reply::Status::Running as i32,

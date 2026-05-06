@@ -22,3 +22,6 @@ rust-version = "1.89"
 pedantic = { level = "deny", priority = -1 }
 missing_errors_doc = "allow"
 result_large_err = "allow"
+indexing_slicing = "warn"
+panic = "warn"
+unwrap_used = "warn"

@@ -8,3 +8,7 @@ tonic::include_proto!("artifex");
 
 #[cfg(not(target_arch = "wasm32"))]
 pub const FILE_DESCRIPTOR_SET: &[u8] = tonic::include_file_descriptor_set!("artifex_descriptor");
+
+mod upload_request_stream;
+
+pub use upload_request_stream::UploadRequestStream;

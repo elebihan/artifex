@@ -8,3 +8,4 @@ pub mod config;
 pub mod error;
 pub mod service;
 pub mod tls;
+pub mod upload_session;

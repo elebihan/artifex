@@ -7,11 +7,13 @@ license.workspace = true
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 prost = "0.14"
+tokio = { version = "1.52", default-features = false }
 tonic = { version = "0.14", default-features = false, features = ["codegen"] }
 tonic-prost = "0.14"
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 prost = "0.14"
+tokio = { workspace = true }
 tonic = "0.14"
 tonic-prost = "0.14"
 
@@ -28,3 +30,9 @@ too_many_lines = "allow"
 
 [lints.rust]
 non_camel_case_types = "allow"
+
+[dependencies]
+blake3 = "1.8.5"
+futures = { workspace = true }
+tokio-fs = "0.1.7"
+tokio-stream = "0.1.18"

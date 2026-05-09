@@ -16,6 +16,8 @@ service Artifex {
   rpc Execute(ExecuteRequest) returns (ExecuteReply) {}
   // Upgrade a the system of a machine
   rpc Upgrade(UpgradeRequest) returns (stream UpgradeReply) {}
+  // Upload a file in the cache of a machine.
+  rpc Upload(stream UploadRequest) returns (UploadResponse);
 }
 
 message InspectRequest {}
@@ -54,4 +56,56 @@ message UpgradeReply {
   }
   Status status = 1;
   int32 position = 2;
+}
+
+// Request streamed when uploading a file.
+message UploadRequest {
+  // Payload of the streamed request.
+  oneof payload {
+    TransferPrologue prologue = 1;
+    TransferChunk chunk = 2;
+    TransferEpilogue epilogue = 3;
+    TransferError error = 4;
+  }
+}
+
+enum DigestKind {
+  BLAKE3 = 0;
+}
+
+message Digest {
+  DigestKind kind = 1;
+  bytes data = 2;
+}
+
+// Prologue when transfering a file.
+message TransferPrologue {
+  // Name of the file being transfered.
+  string file_name = 1;
+  // Size of the file being transfered.
+  uint64 file_size = 2;
+}
+
+// Chunk of data when transfering a file.
+message TransferChunk {
+  // Data from the file being transfered.
+  bytes data = 1;
+}
+
+// Epilogue when transferring a file.
+message TransferEpilogue {
+  // Digest of the file transferred.
+  Digest digest = 1;
+}
+
+// Error when transferring a file.
+message TransferError {
+  // Reason for the error.
+  string reason = 1;
+}
+
+// Reply when uploading a file.
+message UploadResponse {
+  string file_path = 1;
+  uint64 file_size = 2;
 }

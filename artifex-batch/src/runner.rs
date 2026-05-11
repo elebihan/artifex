@@ -11,7 +11,10 @@ use crate::{
     report::{BatchReport, ReportEntry},
 };
 
-use artifex_rpc::{ExecuteRequest, InspectRequest, UpgradeRequest, artifex_client::ArtifexClient};
+use artifex_rpc::{
+    ExecuteRequest, InspectRequest, UpgradeRequest, UploadRequestStream,
+    artifex_client::ArtifexClient,
+};
 use futures_util::StreamExt;
 use humantime::format_duration;
 use std::{fmt::Write, time::Duration};
@@ -67,6 +70,15 @@ where
                     )?;
                 }
                 CommandStatus::Success(Some(CommandOutput::String(output)))
+            }
+            Command::Upload(path) => {
+                let stream = UploadRequestStream::create(path.clone())?;
+                let response = self.client.upload(stream).await?;
+                let reply = response.into_inner();
+                CommandStatus::Success(Some(CommandOutput::String(format!(
+                    "Uploaded as {}",
+                    reply.file_path
+                ))))
             }
         };
         Ok(status)

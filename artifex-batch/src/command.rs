@@ -4,7 +4,7 @@
 // SPDX-License-Identifier: MIT
 //
 
-use std::{fmt::Display, str::FromStr};
+use std::{fmt::Display, path::PathBuf, str::FromStr};
 use thiserror::Error;
 
 /// Errors raised when handling a `Command`.
@@ -24,6 +24,7 @@ pub enum Command {
     Execute(String),
     Inspect,
     Upgrade,
+    Upload(PathBuf),
 }
 
 impl FromStr for Command {
@@ -35,9 +36,10 @@ impl FromStr for Command {
         }
         match s.split_once(':') {
             Some(("EXECUTE", arg)) => Ok(Command::Execute(arg.trim().to_string())),
+            Some(("UPLOAD", arg)) => Ok(Command::Upload(arg.trim().into())),
             Some((cmd, _)) => Err(Error::UnknownCommand(cmd.to_string())),
             None => match s {
-                "EXECUTE" => Err(Error::MissingArgument),
+                "EXECUTE" | "UPLOAD" => Err(Error::MissingArgument),
                 "INSPECT" => Ok(Command::Inspect),
                 "UPGRADE" => Ok(Command::Upgrade),
                 _ => Err(Error::UnknownCommand(s.to_string())),
@@ -52,6 +54,7 @@ impl Display for Command {
             Command::Execute(command) => write!(f, "EXECUTE: {command}"),
             Command::Inspect => write!(f, "INSPECT"),
             Command::Upgrade => write!(f, "UPGRADE"),
+            Command::Upload(path) => write!(f, "UPLOAD: {}", path.display()),
         }
     }
 }

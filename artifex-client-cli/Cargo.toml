@@ -15,7 +15,7 @@ clap = { version = "4.4.8", features = ["derive"] }
 serde = { workspace = true }
 thiserror = { workspace = true }
 tokio = { workspace = true }
-toml = "0.8.22"
+toml = { workspace = true }
 
 [lints]
 workspace = true

@@ -31,3 +31,4 @@ anyhow = "1.0.75"
 serde = { version = "1.0.219", features = ["derive"] }
 thiserror = "2.0.12"
 tokio = { version = "1.52", features = ["full"] }
+toml = "0.8.22"

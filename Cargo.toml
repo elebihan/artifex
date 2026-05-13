@@ -25,3 +25,6 @@ result_large_err = "allow"
 indexing_slicing = "warn"
 panic = "warn"
 unwrap_used = "warn"
+
+[workspace.dependencies]
+tokio = { version = "1.34", features = ["full"] }

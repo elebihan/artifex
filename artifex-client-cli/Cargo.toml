@@ -7,7 +7,7 @@ license.workspace = true
 description = "Artifex client program (command line)"
 
 [dependencies]
-anyhow = "1.0.75"
+anyhow = { workspace = true }
 artifex-batch = { path = "../artifex-batch" }
 artifex-client-kit = { path = "../artifex-client-kit" }
 artifex-rpc = { path = "../artifex-rpc" }

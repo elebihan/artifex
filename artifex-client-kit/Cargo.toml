@@ -7,7 +7,7 @@ license.workspace = true
 description = "Artifex client helpers"
 
 [dependencies]
-anyhow = "1.0.75"
+anyhow = { workspace = true }
 artifex-rpc = { path = "../artifex-rpc" }
 cryptoki = "0.12.0"
 futures = "0.3.29"

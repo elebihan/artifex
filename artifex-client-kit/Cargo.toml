@@ -10,7 +10,7 @@ description = "Artifex client helpers"
 anyhow = { workspace = true }
 artifex-rpc = { path = "../artifex-rpc" }
 cryptoki = "0.12.0"
-futures = "0.3.29"
+futures = { workspace = true }
 hyper = "1.6.0"
 hyper-rustls = { version = "0.27.5", features = ["http2", "ring"] }
 hyper-util = { version = "0.1.11", features = [

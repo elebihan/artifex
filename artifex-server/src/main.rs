@@ -65,6 +65,12 @@ async fn main() -> Result<()> {
         Config::default()
     };
 
+    tracing_subscriber::registry()
+        .with(tracing_subscriber::fmt::layer())
+        .with(tracing_subscriber::EnvFilter::from_default_env())
+        .try_init()
+        .with_context(|| "Failed to init tracing")?;
+
     let tls = if args.insecure {
         None
     } else {
@@ -87,12 +93,6 @@ async fn main() -> Result<()> {
     let reflection = tonic_reflection::server::Builder::configure()
         .register_encoded_file_descriptor_set(FILE_DESCRIPTOR_SET)
         .build_v1()?;
-
-    tracing_subscriber::registry()
-        .with(tracing_subscriber::fmt::layer())
-        .with(tracing_subscriber::EnvFilter::from_default_env())
-        .try_init()
-        .with_context(|| "Failed to init tracing")?;
 
     let builder = Server::builder();
     let builder = if let Some(tls) = tls {

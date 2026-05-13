@@ -13,7 +13,7 @@ artifex-client-kit = { path = "../artifex-client-kit" }
 artifex-rpc = { path = "../artifex-rpc" }
 clap = { version = "4.4.8", features = ["derive"] }
 serde = { version = "1.0.219", features = ["derive"] }
-thiserror = "2.0.12"
+thiserror = { workspace = true }
 tokio = { workspace = true }
 toml = "0.8.22"
 

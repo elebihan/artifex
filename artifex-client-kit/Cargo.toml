@@ -25,7 +25,7 @@ rand = "^0.8"
 rpassword = "7.4.0"
 rsa = { version = "0.9.8", features = ["sha2"] }
 serde = { version = "1.0.219", features = ["derive"] }
-thiserror = "2.0.12"
+thiserror = { workspace = true }
 tokio = { workspace = true }
 tokio-rustls = { version = "0.26.2", features = ["ring"] }
 tokio-stream = { version = "0.1.14", features = ["net"] }

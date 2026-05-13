@@ -27,4 +27,5 @@ panic = "warn"
 unwrap_used = "warn"
 
 [workspace.dependencies]
+thiserror = "2.0.12"
 tokio = { version = "1.52", features = ["full"] }

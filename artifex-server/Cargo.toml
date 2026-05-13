@@ -16,7 +16,7 @@ tokio-stream = { version = "0.1.14", features = ["net"] }
 tonic = { version = "0.14", features = ["tls-ring"] }
 tonic-reflection = "0.14"
 tonic-web = "0.14"
-clap = { version = "4.4.8", features = ["derive"] }
+clap = { workspace = true }
 toml = { workspace = true }
 serde = { workspace = true }
 thiserror = { workspace = true }

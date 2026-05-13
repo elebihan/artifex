@@ -8,23 +8,20 @@ description = "Artifex command batch management for clients"
 
 [dependencies]
 artifex-rpc = { path = "../artifex-rpc" }
-thiserror = "1.0.50"
 futures-util = "0.3.29"
 chrono = "0.4.31"
 uuid = { version = "1.15.1", features = ["v4", "rng-getrandom"] }
 humantime = "2.1.0"
 http-body = "1.0.0"
-serde = { version = "1.0.219", features = ["derive"] }
+serde = { workspace = true }
+thiserror = { workspace = true }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
-tonic = { version = "0.13", default-features = false, features = [
-  "prost",
-  "codegen",
-] }
-getrandom = { version = "0.3", features = ["wasm_js"] }
+tonic = { version = "0.14", default-features = false, features = ["codegen"] }
+getrandom = { version = "0.4", features = ["wasm_js"] }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-tonic = "0.13"
+tonic = "0.14"
 
 [lints]
 workspace = true

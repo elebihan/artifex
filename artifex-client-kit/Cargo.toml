@@ -24,7 +24,7 @@ pkcs8 = { version = "0.10.2", features = ["encryption", "pem"] }
 rand = "^0.8"
 rpassword = "7.4.0"
 rsa = { version = "0.9.8", features = ["sha2"] }
-serde = { version = "1.0.219", features = ["derive"] }
+serde = { workspace = true }
 thiserror = { workspace = true }
 tokio = { workspace = true }
 tokio-rustls = { version = "0.26.2", features = ["ring"] }

@@ -18,7 +18,7 @@ tonic-reflection = "0.14"
 tonic-web = "0.14"
 clap = { version = "4.4.8", features = ["derive"] }
 toml = "0.8.22"
-serde = { version = "1.0.219", features = ["derive"] }
+serde = { workspace = true }
 thiserror = { workspace = true }
 tracing = "0.1.41"
 tracing-subscriber = { version = "0.3.19", features = ["env-filter"] }

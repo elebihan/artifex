@@ -11,7 +11,7 @@ libc = "0.2.168"
 thiserror = { workspace = true }
 rand = "0.9.0"
 nix = { version = "0.28.0", features = ["feature"] }
-serde = { version = "1.0.219", features = ["derive"] }
+serde = { workspace = true }
 
 [lints]
 workspace = true

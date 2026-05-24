@@ -9,15 +9,16 @@ use crate::{
     command::{Command, CommandOutput, CommandStatus},
     error::Error,
     report::{BatchReport, ReportEntry},
+    upload_progress::UploadProgress,
 };
-
 use artifex_rpc::{
     ExecuteRequest, InspectRequest, UpgradeRequest, UploadRequestStream,
     artifex_client::ArtifexClient,
 };
 use futures_util::StreamExt;
 use humantime::format_duration;
-use std::{fmt::Write, time::Duration};
+use std::{fmt::Write, sync::Arc, time::Duration};
+use tokio::task::spawn_blocking;
 use uuid::Uuid;
 
 /// Run commands via a client.
@@ -72,8 +73,21 @@ where
                 CommandStatus::Success(Some(CommandOutput::String(output)))
             }
             Command::Upload(path) => {
+                let file_metadata = std::fs::metadata(path)?;
+                let file_size = file_metadata.len();
+
                 let stream = UploadRequestStream::create(path.clone())?;
-                let response = self.client.upload(stream).await?;
+                let progress_callback = Arc::new(|progress| {
+                    // Use spawn_blocking to safely print from async context
+                    spawn_blocking(move || {
+                        println!("Upload progress: {progress}%");
+                    });
+                });
+
+                let progress_stream =
+                    UploadProgress::new(stream, file_size, Some(progress_callback));
+
+                let response = self.client.upload(progress_stream).await?;
                 let reply = response.into_inner();
                 CommandStatus::Success(Some(CommandOutput::String(format!(
                     "Uploaded as {}",

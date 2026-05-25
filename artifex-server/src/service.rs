@@ -6,17 +6,23 @@
 
 use artifex_engine::{Config, Engine};
 use artifex_rpc::{
-    ExecuteReply, ExecuteRequest, InspectReply, InspectRequest, UpgradeReply, UpgradeRequest,
-    artifex_server::Artifex, upgrade_reply,
+    Digest, ExecuteReply, ExecuteRequest, InspectReply, InspectRequest, TransferEpilogue,
+    UpgradeReply, UpgradeRequest, UploadRequest, UploadResponse, artifex_server::Artifex,
+    upgrade_reply, upload_request::Payload,
 };
 
 use futures::Stream;
+use std::fs;
+use std::path::Path;
 use std::sync::Mutex;
 use std::{pin::Pin, sync::Arc};
 use tokio::sync::mpsc;
 use tokio::task;
 use tokio_stream::wrappers::ReceiverStream;
-use tonic::{Request, Response, Status};
+use tonic::{Request, Response, Status, Streaming};
+use tracing::{debug, error, warn};
+
+use crate::upload_session::UploadSession;
 
 #[derive(Default)]
 pub struct ArtifexService {
@@ -109,5 +115,81 @@ impl Artifex for ArtifexService {
 
         let ostream = ReceiverStream::new(rx);
         Ok(Response::new(Box::pin(ostream) as Self::UpgradeStream))
+    }
+    /// Upload a file on a machine.
+    async fn upload(
+        &self,
+        request: Request<Streaming<UploadRequest>>,
+    ) -> Result<Response<UploadResponse>, Status> {
+        let mut session: Option<UploadSession> = None;
+        let mut file_path = None;
+        let mut istream = request.into_inner();
+        while let Some(request) = istream.message().await? {
+            match request.payload {
+                Some(Payload::Prologue(prologue)) => {
+                    debug!("Received transfer prologue {prologue:?}");
+                    session = UploadSession::new(
+                        &prologue.file_name,
+                        prologue.file_size,
+                        Path::new("/tmp"),
+                    )
+                    .await
+                    .map(Some)
+                    .map_err(|e| Status::internal(format!("Failed to upload session: {e}")))?;
+                }
+                Some(Payload::Chunk(chunk)) => {
+                    if let Some(session) = session.as_mut() {
+                        session
+                            .write_chunk(&chunk.data)
+                            .await
+                            .map_err(|e| Status::internal(format!("Failed to write chunk: {e}")))?;
+                    } else {
+                        return Err(Status::internal("No upload session available"));
+                    }
+                }
+                Some(Payload::Epilogue(TransferEpilogue {
+                    digest: Some(digest),
+                })) => {
+                    debug!("Received transfer epilogue with digest {digest:?}");
+                    if let Some(session) = session.as_mut() {
+                        let Digest {
+                            kind: _,
+                            data: expected_hash,
+                        } = digest;
+                        file_path = session
+                            .finalize(expected_hash.as_slice())
+                            .await
+                            .map(Some)
+                            .map_err(|e| Status::internal(e.to_string()))?;
+                    } else {
+                        return Err(Status::internal("No upload session available"));
+                    }
+                    break;
+                }
+                Some(Payload::Epilogue(TransferEpilogue { digest: _ })) => {
+                    return Err(Status::internal("No digest received"));
+                }
+                Some(Payload::Error(error)) => {
+                    error!("client-side error: {}", error.reason);
+                    return Err(Status::internal(error.reason));
+                }
+                None => {
+                    warn!("No payload received");
+                }
+            }
+        }
+        if let Some(file_path) = file_path {
+            let file_size = fs::metadata(&file_path)
+                .map_err(|e| Status::internal(format!("Failed to get uploaded file size: {e}")))
+                .map(|m| m.len())?;
+            let file_path = file_path.to_string_lossy().to_string();
+            debug!("Uploaded as {file_path} ({file_size} bytes)");
+            Ok(Response::new(UploadResponse {
+                file_path,
+                file_size,
+            }))
+        } else {
+            Err(Status::internal("No file created"))
+        }
     }
 }
